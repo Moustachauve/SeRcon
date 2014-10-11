@@ -11,10 +11,23 @@ namespace SeRconCore
 {
 	public class ServerManager
 	{
+
 		#region Event definitions
 
+		/// <summary>
+		/// Occurs when a client connect to the server
+		/// </summary>
 		public event EventHandler<TcpEventArgs> OnClientConnected;
+
+		/// <summary>
+		/// Occurs when a client disconnect from the server
+		/// </summary>
 		public event EventHandler<TcpEventArgs> OnClientDisonnected;
+
+		[Obsolete("This method is for testing purpose and will be removed")]
+		/// <summary>
+		/// Occurs when a message is received from an other client
+		/// </summary>
 		public event EventHandler<NotificationReceivedArgs> OnMessageReceived;
 
 		#endregion
@@ -25,43 +38,73 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
-        private ulong m_currUserIndex;
-		
+		private ulong m_currUserIndex;
+
 		private Dictionary<string, byte[]> m_adminList;
 
 		#endregion
 
 		#region Properties
 
+		/// <summary>
+		/// Get or set the Ip address the Rcon will listen to
+		/// </summary>
 		public IPAddress Ip
 		{
 			get { return m_ip; }
-			set { m_ip = value; }
+			set
+			{
+				if (IsRunning)
+					throw new InvalidOperationException("Can't change server listen Ip while server is running");
+				m_ip = value;
+			}
 		}
 
+		/// <summary>
+		/// Get or set the port the Rcon will listen to
+		/// </summary>
 		public int Port
 		{
 			get { return m_port; }
-			set { m_port = value; }
+			set
+			{
+				if (IsRunning)
+					throw new InvalidOperationException("Can't change server listen port while server is running");
+				m_port = value;
+			}
 		}
 
+		/// <summary>
+		/// Determine whether the Rcon server is running or not
+		/// </summary>
 		public bool IsRunning
 		{
 			get { return m_server != null; }
 		}
 
+		/// <summary>
+		/// Get a list of all the client that are connected to the Rcon server
+		/// </summary>
 		public ICollection<TcpClientInfo> ConnectedClients
 		{
-			get { return m_server.Clients.Values; }
+			get
+			{
+				if (!IsRunning)
+					throw new InvalidOperationException("Can't get list of client while the server is not running");
+
+				return m_server.Clients.Values;
+			}
 		}
 
 		#endregion
 
 		#region Constructor
 
+		/// <summary>
+		/// Create a new Rcon server manager that listen to all Ip address with the default port (8888)
+		/// </summary>
 		public ServerManager()
 		{
-			//TODO: Load preference from file
 			m_ip = IPAddress.Any;
 			m_port = 8888;
 
@@ -70,6 +113,11 @@ namespace SeRconCore
 			m_adminList = new Dictionary<string, byte[]> { { "test", sha256.ComputeHash(Encoding.UTF8.GetBytes("test")) } };
 		}
 
+		/// <summary>
+		/// Create a new Rcon server manager with a specific Ip address and port
+		/// </summary>
+		/// <param name="pIp">Ip address to listen</param>
+		/// <param name="pPort">Port to listen</param>
 		public ServerManager(IPAddress pIp, int pPort)
 		{
 			m_ip = pIp;
@@ -80,21 +128,19 @@ namespace SeRconCore
 			m_adminList = new Dictionary<string, byte[]> { { "test", sha256.ComputeHash(Encoding.UTF8.GetBytes("test")) } };
 		}
 
-		~ServerManager()
-		{
-			Stop();
-		}
-
 		#endregion
 
 		#region Start / Stop
 
+		/// <summary>
+		/// Start the Rcon server and begin to listen for connection
+		/// </summary>
 		public void Start()
 		{
 			if (IsRunning)
 				return;
 
-            m_currUserIndex = 0;
+			m_currUserIndex = 0;
 			m_server = new TcpServerHandler(m_ip, m_port);
 
 			//TODO: Make ssl certification
@@ -105,11 +151,14 @@ namespace SeRconCore
 			m_server.Start();
 		}
 
+		/// <summary>
+		/// Close all connection to the Rcon server and stop it
+		/// </summary>
 		public void Stop()
 		{
 			if (!IsRunning)
 				return;
-			this.SendToAll("Server is shutting down...");
+			this.NotifyAll("Server is shutting down...");
 
 			m_server.Connected -= m_server_Connected;
 			m_server.Disconnected -= m_server_Disconnected;
@@ -126,7 +175,7 @@ namespace SeRconCore
 
 		#region OnClientConnect
 
-		void m_server_Connected(object sender, TcpEventArgs e)
+		private void m_server_Connected(object sender, TcpEventArgs e)
 		{
 			UserInfo client = new UserInfo(m_currUserIndex++, "Guest");
 			e.Client.Tag = client;
@@ -141,7 +190,7 @@ namespace SeRconCore
 
 		#region OnCliendDisconnect
 
-		void m_server_Disconnected(object sender, TcpEventArgs e)
+		private void m_server_Disconnected(object sender, TcpEventArgs e)
 		{
 			if (OnClientDisonnected != null)
 			{
@@ -153,20 +202,20 @@ namespace SeRconCore
 
 		#region OnCommandReceived
 
-		void m_server_ReceivedFull(object sender, TcpReceivedEventArgs e)
+		private void m_server_ReceivedFull(object sender, TcpReceivedEventArgs e)
 		{
 			var commandReceived = (CommandType)e.Data[0];
 			switch (commandReceived)
-            {
-                case CommandType.Notification:
+			{
+				case CommandType.Notification:
 					NotificationReceived(e.Data);
-                    break;
-                case CommandType.Login:
+					break;
+				case CommandType.Login:
 					LoginRequest(e);
-                    break;
-                case CommandType.Error:
-                    break;
-            }
+					break;
+				case CommandType.Error:
+					break;
+			}
 		}
 
 		#endregion
@@ -198,6 +247,18 @@ namespace SeRconCore
 			m_server.Send(e.Client, command);
 		}
 
+		private bool TryLogIn(string pUsername, string pPassword)
+		{
+			if (!m_adminList.ContainsKey(pUsername))
+				return false;
+
+			byte[] passwordBytes = Encoding.UTF8.GetBytes(pPassword);
+			SHA256Managed hashstring = new SHA256Managed();
+			byte[] hash = hashstring.ComputeHash(passwordBytes);
+
+			return m_adminList[pUsername].SequenceEqual(hash);
+		}
+
 		#endregion
 
 		[Obsolete("This method is only used for testing purpose")]
@@ -214,29 +275,36 @@ namespace SeRconCore
 
 		#endregion
 
-		public void SendToAll(string pMessage)
+		#region Server commands
+
+		/// <summary>
+		/// Send a notification to all connected clients
+		/// </summary>
+		/// <param name="pMessage">Message to be sent</param>
+		public void NotifyAll(string pMessage)
 		{
-            byte[] data = Command.PrefixCommand(CommandType.Notification, pMessage);
+			if (!IsRunning)
+				throw new InvalidOperationException("Can't send a notification while server is not running");
+
+			byte[] data = Command.PrefixCommand(CommandType.Notification, pMessage);
 			m_server.SendAll(data);
 		}
 
-		public void SendTo(TcpClientInfo pClient, string pMessage)
+		/// <summary>
+		/// Send a notification to a client
+		/// </summary>
+		/// <param name="pMessage">Message to be sent</param>
+		/// <param name="pClient">Client to be notified</param>
+		public void Notify(string pMessage, TcpClientInfo pClient)
 		{
-            byte[] data = Command.PrefixCommand(CommandType.Notification, pMessage);
-            m_server.Send(pClient, data);
+			if (!IsRunning)
+				throw new InvalidOperationException("Can't send a notification while server is not running");
+
+			byte[] data = Command.PrefixCommand(CommandType.Notification, pMessage);
+			m_server.Send(pClient, data);
 		}
 
-		private bool TryLogIn(string pUsername, string pPassword)
-		{
-			if (!m_adminList.ContainsKey(pUsername))
-				return false;
-
-			byte[] passwordBytes = Encoding.UTF8.GetBytes(pPassword);
-			SHA256Managed hashstring = new SHA256Managed();
-			byte[] hash = hashstring.ComputeHash(passwordBytes);
-
-			return m_adminList[pUsername].SequenceEqual(hash);
-		}
+		#endregion
 
 	}
 }

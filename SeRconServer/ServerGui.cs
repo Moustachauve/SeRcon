@@ -27,7 +27,6 @@ namespace SeRconServer
 			m_serverHandler.OnClientDisonnected += m_serverHandler_OnClientDisonnected;
 			m_serverHandler.OnMessageReceived += m_serverHandler_OnMessageReceived;
 
-
 			Start();
 		}
 
@@ -39,7 +38,7 @@ namespace SeRconServer
 				return;
 			}
 				m_serverHandler.Start();
-				logViewer.Write("Server is now listenning to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
+				logViewer.Write("Server is now listening to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
 			
 		}
 
@@ -63,7 +62,7 @@ namespace SeRconServer
 		private void OnClientConnect(TcpEventArgs arg)
 		{
 			logViewer.Write("Client connected");
-			m_serverHandler.SendTo(arg.Client, "Welcome to this server.");
+			m_serverHandler.Notify("Welcome to this server.", arg.Client);
 		}
 
 		#endregion
@@ -115,6 +114,11 @@ namespace SeRconServer
 		}
 
 		#endregion
+
+		private void ServerGui_FormClosing(object sender, FormClosingEventArgs e)
+		{
+			m_serverHandler.Stop();
+		}
 
 	}
 }

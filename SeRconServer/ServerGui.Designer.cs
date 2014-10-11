@@ -40,7 +40,7 @@
 			this.logViewer.Location = new System.Drawing.Point(0, 0);
 			this.logViewer.MinimumSize = new System.Drawing.Size(20, 20);
 			this.logViewer.Name = "logViewer";
-			this.logViewer.Size = new System.Drawing.Size(520, 404);
+			this.logViewer.Size = new System.Drawing.Size(624, 290);
 			this.logViewer.StyleSheet = "/Style/log.css";
 			this.logViewer.TabIndex = 0;
 			this.logViewer.WebBrowserShortcutsEnabled = false;
@@ -49,10 +49,11 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(520, 404);
+			this.ClientSize = new System.Drawing.Size(624, 290);
 			this.Controls.Add(this.logViewer);
 			this.Name = "ServerGui";
 			this.Text = "Form1";
+			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ServerGui_FormClosing);
 			this.ResumeLayout(false);
 
 		}

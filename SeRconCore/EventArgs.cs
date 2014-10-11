@@ -9,6 +9,9 @@ namespace SeRconCore
 {
 	#region NotificationReceived
 
+	/// <summary>
+	/// Represent information relative to a notification
+	/// </summary>
 	public class NotificationReceivedArgs : EventArgs
     {
         private readonly string m_notification;
@@ -34,7 +37,10 @@ namespace SeRconCore
 
 	#region Login Feedback
 
-	public class LoginFeedbackArgs : EventArgs
+	/// <summary>
+	/// Represent the result of a logging request
+	/// </summary>
+	public class LoggingFeedbackArgs : EventArgs
 	{
 		private readonly bool m_succeeded;
 
@@ -43,7 +49,7 @@ namespace SeRconCore
 			get { return m_succeeded; }
 		}
 
-		public LoginFeedbackArgs(bool pSucceeded)
+		public LoggingFeedbackArgs(bool pSucceeded)
 		{
 			m_succeeded = pSucceeded;
 		}
