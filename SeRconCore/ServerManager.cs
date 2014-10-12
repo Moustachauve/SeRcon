@@ -278,6 +278,22 @@ namespace SeRconCore
 		#region Server commands
 
 		/// <summary>
+		/// Send a notification to all logged-in user
+		/// </summary>
+		/// <param name="pMessage">Message to be sent</param>
+		public void NotifyAllAdmin(string pMessage)
+		{
+			foreach (var currClient in ConnectedClients)
+			{
+				var clientInfo = (UserInfo)currClient.Tag;
+				if(clientInfo.IsLoggedIn)
+				{
+					Notify(pMessage, currClient);
+				}
+			}
+		}
+
+		/// <summary>
 		/// Send a notification to all connected clients
 		/// </summary>
 		/// <param name="pMessage">Message to be sent</param>
