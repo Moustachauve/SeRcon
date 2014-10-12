@@ -47,9 +47,6 @@ namespace SeRconClient
 			mnu_server_connect.Enabled = !m_clientManager.IsConnected;
 			mnu_server_disconnect.Enabled = m_clientManager.IsConnected;
 
-			mnu_server_logIn.Enabled = m_clientManager.IsConnected && !m_clientManager.IsLoggedIn;
-			mnu_server_logOut.Enabled = m_clientManager.IsConnected && m_clientManager.IsLoggedIn;
-
 			ss_progress.Visible = false;
 		}
 
@@ -109,36 +106,14 @@ namespace SeRconClient
 
 		#endregion
 
-		#region logging
-
-		private void mnu_server_logIn_Click(object sender, EventArgs e)
-		{
-			new Login(this).ShowDialog();
-		}
-
-		#endregion
-
 		#endregion
 
 		#endregion
 
 		#region Connection to server
 
-		/// <summary>
-		/// Connect this client to a server
-		/// </summary>
-		/// <param name="pAddress">Address of the server</param>
-		/// <param name="pPort">Port of the server</param>
-		public async void ConnectToServer(string pAddress, string pPort)
+		private async Task<bool> tryConnect(string pAddress, string pPort)
 		{
-			ss_Status.Text = "Connecting to " + pAddress + ":" + pPort + "...";
-			lgvConsole.WriteLine("Connecting to " + pAddress + ":" + pPort + "...");
-			ss_progress.Visible = true;
-
-			Application.UseWaitCursor = true;
-
-			mnu_server_connect.Enabled = false;
-
 			IPAddress serverIp;
 			if (!IPAddress.TryParse(pAddress, out serverIp))
 			{
@@ -162,14 +137,31 @@ namespace SeRconClient
 
 					UpdateElementConnected();
 
-					return;
+					return false;
 				}
 			}
 
 			m_clientManager.Ip = serverIp;
 			m_clientManager.Port = int.Parse(pPort);
+			return await m_clientManager.ConnectAsync();
+		}
 
-			bool isSuccessful = await m_clientManager.ConnectAsync();
+		/// <summary>
+		/// Connect this client to a server anonymously
+		/// </summary>
+		/// <param name="pAddress">Address of the server</param>
+		/// <param name="pPort">Port of the server</param>
+		public async void ConnectToServer(string pAddress, string pPort)
+		{
+			ss_Status.Text = "Connecting to " + pAddress + ":" + pPort + "...";
+			lgvConsole.WriteLine("Connecting to " + pAddress + ":" + pPort + "...");
+			ss_progress.Visible = true;
+
+			Application.UseWaitCursor = true;
+
+			mnu_server_connect.Enabled = false;
+
+			bool isSuccessful = await tryConnect(pAddress, pPort);
 
 			if (isSuccessful)
 			{
@@ -186,18 +178,45 @@ namespace SeRconClient
 			UpdateElementConnected();
 		}
 
+		public async void ConnectToServer(string pAddress, string pPort, string pPassword)
+		{
+			ss_Status.Text = "Connecting to " + pAddress + ":" + pPort + "...";
+			lgvConsole.WriteLine("Connecting to " + pAddress + ":" + pPort + "...");
+			ss_progress.Visible = true;
+
+			Application.UseWaitCursor = true;
+
+			mnu_server_connect.Enabled = false;
+
+			bool isSuccessful = await tryConnect(pAddress, pPort);
+
+			if (isSuccessful)
+			{
+				ss_Status.Text = "Connected to " + pAddress + ":" + pPort;
+				lgvConsole.WriteLine("Connected to " + pAddress + ":" + pPort);
+
+				RequestLogging(pPassword);
+			}
+			else
+			{
+				ss_Status.Text = "Failed to connect to " + pAddress + ":" + pPort;
+				lgvConsole.WriteLine("Failed to connect to " + pAddress + ":" + pPort, MessageType.Error);
+				lgvConsole.Write(m_clientManager.LastConnectionError.Message);
+				UpdateElementConnected();
+			}
+		}
+
 		#endregion
 
 		#region Logging into the server
 
-		public void RequestLogging(string pUsername, string pPassword)
+		public void RequestLogging(string pPassword)
 		{
 			Application.UseWaitCursor = true;
-			ss_Status.Text = "Trying to log in as " + pUsername + "...";
-			lgvConsole.WriteLine("Trying to log in as " + pUsername + "...");
-			mnu_server_logIn.Enabled = false;
+			ss_Status.Text = "Logging in...";
+			lgvConsole.WriteLine("Logging in...");
 
-			m_clientManager.SendLoggingRequest(pUsername, pPassword);
+			m_clientManager.SendLoggingRequest(pPassword);
 		}
 
 		void m_clientManager_OnLoggingFeedback(object sender, LoggingFeedbackArgs e)
@@ -219,8 +238,8 @@ namespace SeRconClient
 		{
 			if(e.Succeeded)
 			{
-				ss_Status.Text = "Logged in " + m_clientManager.Ip + ":" + m_clientManager.Port + " as " + m_clientManager.Username;
-				lgvConsole.WriteLine("Logged in as " + m_clientManager.Username);
+				ss_Status.Text = "Logged in successfully to " + m_clientManager.Ip + ":" + m_clientManager.Port;
+				lgvConsole.WriteLine("Logged in successfully");
 			}
 			else
 			{

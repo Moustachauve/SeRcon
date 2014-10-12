@@ -33,13 +33,16 @@
 			this.txtPort = new System.Windows.Forms.TextBox();
 			this.panAddress = new System.Windows.Forms.Panel();
 			this.txtAddress = new System.Windows.Forms.TextBox();
-			this.btnCancel = new System.Windows.Forms.Button();
 			this.btnConnect = new System.Windows.Forms.Button();
 			this.lblPort = new System.Windows.Forms.Label();
 			this.lblIp = new System.Windows.Forms.Label();
+			this.lblPassword = new System.Windows.Forms.Label();
+			this.panPassword = new System.Windows.Forms.Panel();
+			this.txtPassword = new System.Windows.Forms.TextBox();
 			this.grpConnection.SuspendLayout();
 			this.panPort.SuspendLayout();
 			this.panAddress.SuspendLayout();
+			this.panPassword.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// grpConnection
@@ -47,16 +50,17 @@
 			this.grpConnection.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.grpConnection.Controls.Add(this.panPassword);
+			this.grpConnection.Controls.Add(this.lblPassword);
 			this.grpConnection.Controls.Add(this.panPort);
 			this.grpConnection.Controls.Add(this.panAddress);
-			this.grpConnection.Controls.Add(this.btnCancel);
 			this.grpConnection.Controls.Add(this.btnConnect);
 			this.grpConnection.Controls.Add(this.lblPort);
 			this.grpConnection.Controls.Add(this.lblIp);
 			this.grpConnection.Location = new System.Drawing.Point(10, 10);
 			this.grpConnection.Margin = new System.Windows.Forms.Padding(1);
 			this.grpConnection.Name = "grpConnection";
-			this.grpConnection.Size = new System.Drawing.Size(347, 100);
+			this.grpConnection.Size = new System.Drawing.Size(347, 120);
 			this.grpConnection.TabIndex = 0;
 			this.grpConnection.TabStop = false;
 			this.grpConnection.Text = "Connect to a Rcon server";
@@ -93,21 +97,9 @@
 			this.txtAddress.Size = new System.Drawing.Size(256, 20);
 			this.txtAddress.TabIndex = 2;
 			// 
-			// btnCancel
-			// 
-			this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.btnCancel.Location = new System.Drawing.Point(201, 67);
-			this.btnCancel.Name = "btnCancel";
-			this.btnCancel.Size = new System.Drawing.Size(62, 23);
-			this.btnCancel.TabIndex = 6;
-			this.btnCancel.Text = "Cancel";
-			this.btnCancel.UseVisualStyleBackColor = true;
-			// 
 			// btnConnect
 			// 
-			this.btnConnect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.btnConnect.Location = new System.Drawing.Point(271, 67);
+			this.btnConnect.Location = new System.Drawing.Point(271, 83);
 			this.btnConnect.Name = "btnConnect";
 			this.btnConnect.Size = new System.Drawing.Size(70, 23);
 			this.btnConnect.TabIndex = 5;
@@ -133,13 +125,37 @@
 			this.lblIp.TabIndex = 1;
 			this.lblIp.Text = "Address:";
 			// 
+			// lblPassword
+			// 
+			this.lblPassword.AutoSize = true;
+			this.lblPassword.Location = new System.Drawing.Point(6, 68);
+			this.lblPassword.Name = "lblPassword";
+			this.lblPassword.Size = new System.Drawing.Size(56, 13);
+			this.lblPassword.TabIndex = 9;
+			this.lblPassword.Text = "Password:";
+			// 
+			// panPassword
+			// 
+			this.panPassword.BackColor = System.Drawing.SystemColors.Control;
+			this.panPassword.Controls.Add(this.txtPassword);
+			this.panPassword.Location = new System.Drawing.Point(6, 84);
+			this.panPassword.Name = "panPassword";
+			this.panPassword.Size = new System.Drawing.Size(258, 22);
+			this.panPassword.TabIndex = 8;
+			// 
+			// txtPassword
+			// 
+			this.txtPassword.Location = new System.Drawing.Point(1, 1);
+			this.txtPassword.Name = "txtPassword";
+			this.txtPassword.Size = new System.Drawing.Size(256, 20);
+			this.txtPassword.TabIndex = 2;
+			// 
 			// Connect
 			// 
 			this.AcceptButton = this.btnConnect;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.CancelButton = this.btnCancel;
-			this.ClientSize = new System.Drawing.Size(367, 120);
+			this.ClientSize = new System.Drawing.Size(367, 140);
 			this.Controls.Add(this.grpConnection);
 			this.DoubleBuffered = true;
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -157,6 +173,8 @@
 			this.panPort.PerformLayout();
 			this.panAddress.ResumeLayout(false);
 			this.panAddress.PerformLayout();
+			this.panPassword.ResumeLayout(false);
+			this.panPassword.PerformLayout();
 			this.ResumeLayout(false);
 
 		}
@@ -168,9 +186,11 @@
 		private System.Windows.Forms.TextBox txtPort;
 		private System.Windows.Forms.TextBox txtAddress;
 		private System.Windows.Forms.Label lblIp;
-		private System.Windows.Forms.Button btnCancel;
 		private System.Windows.Forms.Button btnConnect;
 		private System.Windows.Forms.Panel panAddress;
 		private System.Windows.Forms.Panel panPort;
+		private System.Windows.Forms.Panel panPassword;
+		private System.Windows.Forms.TextBox txtPassword;
+		private System.Windows.Forms.Label lblPassword;
 	}
 }

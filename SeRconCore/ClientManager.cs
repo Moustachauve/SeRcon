@@ -275,27 +275,21 @@ namespace SeRconCore
 		/// </summary>
 		/// <param name="pUsername">Username of the user</param>
 		/// <param name="pPassword">Password of the user</param>
-		public void SendLoggingRequest(string pUsername, string pPassword)
+		public void SendLoggingRequest(string pPassword)
 		{
 			if (!IsConnected)
 				throw new InvalidOperationException("Can't send a logging request while not connected to a server");
 			if (IsLoggedIn)
 				throw new InvalidOperationException("Can't send a logging resquest while already logged in");
 
-			m_username = pUsername;
-
 			//TODO: Find a way to secure the password transfer over the internet
-			byte[] username = Encoding.UTF8.GetBytes(pUsername);
 			byte[] password = Encoding.UTF8.GetBytes(pPassword);
 
-			byte[] command = new byte[username.Length + password.Length + 3];
+			byte[] command = new byte[password.Length + 2];
 			command[0] = (byte)CommandType.Login;
 
-			command[1] = (byte)username.Length;
-			username.CopyTo(command, 2);
-
-			command[username.Length + 2] = (byte)password.Length;
-			password.CopyTo(command, username.Length + 3);
+			command[1] = (byte)password.Length;
+			password.CopyTo(command, 2);
 
 			m_client.Send(command);
 		}

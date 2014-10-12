@@ -50,7 +50,11 @@ namespace SeRconClient
 
 			if(isValid)
 			{
-				m_parent.ConnectToServer(txtAddress.Text, txtPort.Text);
+				if(txtPassword.Text.Length == 0)
+					m_parent.ConnectToServer(txtAddress.Text, txtPort.Text);
+				else
+					m_parent.ConnectToServer(txtAddress.Text, txtPort.Text, txtPassword.Text);
+
 				this.Close();
 			}
 		}

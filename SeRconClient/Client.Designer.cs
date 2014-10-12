@@ -35,15 +35,12 @@
 			this.mnu_server_connect = new System.Windows.Forms.ToolStripMenuItem();
 			this.mnu_server_disconnect = new System.Windows.Forms.ToolStripMenuItem();
 			this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+			this.ss_progress = new System.Windows.Forms.ToolStripProgressBar();
 			this.ss_Status = new System.Windows.Forms.ToolStripStatusLabel();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
-			this.tab_player = new System.Windows.Forms.TabPage();
 			this.tab_console = new System.Windows.Forms.TabPage();
 			this.lgvConsole = new SeRconCore.Control.LogViewer();
-			this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
-			this.mnu_server_logIn = new System.Windows.Forms.ToolStripMenuItem();
-			this.mnu_server_logOut = new System.Windows.Forms.ToolStripMenuItem();
-			this.ss_progress = new System.Windows.Forms.ToolStripProgressBar();
+			this.tab_player = new System.Windows.Forms.TabPage();
 			this.menuStrip1.SuspendLayout();
 			this.statusStrip1.SuspendLayout();
 			this.tabControl1.SuspendLayout();
@@ -73,7 +70,7 @@
 			// 
 			this.mnu_file_exit.Name = "mnu_file_exit";
 			this.mnu_file_exit.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F4)));
-			this.mnu_file_exit.Size = new System.Drawing.Size(152, 22);
+			this.mnu_file_exit.Size = new System.Drawing.Size(134, 22);
 			this.mnu_file_exit.Text = "Exit";
 			this.mnu_file_exit.Click += new System.EventHandler(this.mnu_file_exit_Click);
 			// 
@@ -81,10 +78,7 @@
 			// 
 			this.mnu_server.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.mnu_server_connect,
-            this.mnu_server_disconnect,
-            this.toolStripMenuItem1,
-            this.mnu_server_logIn,
-            this.mnu_server_logOut});
+            this.mnu_server_disconnect});
 			this.mnu_server.Name = "mnu_server";
 			this.mnu_server.Size = new System.Drawing.Size(51, 20);
 			this.mnu_server.Text = "Server";
@@ -115,6 +109,14 @@
 			this.statusStrip1.TabIndex = 1;
 			this.statusStrip1.Text = "statusStrip1";
 			// 
+			// ss_progress
+			// 
+			this.ss_progress.MarqueeAnimationSpeed = 60;
+			this.ss_progress.Name = "ss_progress";
+			this.ss_progress.Size = new System.Drawing.Size(100, 16);
+			this.ss_progress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+			this.ss_progress.Visible = false;
+			// 
 			// ss_Status
 			// 
 			this.ss_Status.Name = "ss_Status";
@@ -133,16 +135,6 @@
 			this.tabControl1.Size = new System.Drawing.Size(736, 333);
 			this.tabControl1.SizeMode = System.Windows.Forms.TabSizeMode.FillToRight;
 			this.tabControl1.TabIndex = 2;
-			// 
-			// tab_player
-			// 
-			this.tab_player.Location = new System.Drawing.Point(4, 22);
-			this.tab_player.Name = "tab_player";
-			this.tab_player.Padding = new System.Windows.Forms.Padding(3);
-			this.tab_player.Size = new System.Drawing.Size(728, 307);
-			this.tab_player.TabIndex = 0;
-			this.tab_player.Text = "Players";
-			this.tab_player.UseVisualStyleBackColor = true;
 			// 
 			// tab_console
 			// 
@@ -169,33 +161,15 @@
 			this.lgvConsole.TabIndex = 0;
 			this.lgvConsole.WebBrowserShortcutsEnabled = false;
 			// 
-			// toolStripMenuItem1
+			// tab_player
 			// 
-			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
-			// 
-			// mnu_server_logIn
-			// 
-			this.mnu_server_logIn.Enabled = false;
-			this.mnu_server_logIn.Name = "mnu_server_logIn";
-			this.mnu_server_logIn.Size = new System.Drawing.Size(152, 22);
-			this.mnu_server_logIn.Text = "Log In...";
-			this.mnu_server_logIn.Click += new System.EventHandler(this.mnu_server_logIn_Click);
-			// 
-			// mnu_server_logOut
-			// 
-			this.mnu_server_logOut.Enabled = false;
-			this.mnu_server_logOut.Name = "mnu_server_logOut";
-			this.mnu_server_logOut.Size = new System.Drawing.Size(152, 22);
-			this.mnu_server_logOut.Text = "Log out";
-			// 
-			// ss_progress
-			// 
-			this.ss_progress.MarqueeAnimationSpeed = 60;
-			this.ss_progress.Name = "ss_progress";
-			this.ss_progress.Size = new System.Drawing.Size(100, 16);
-			this.ss_progress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-			this.ss_progress.Visible = false;
+			this.tab_player.Location = new System.Drawing.Point(4, 22);
+			this.tab_player.Name = "tab_player";
+			this.tab_player.Padding = new System.Windows.Forms.Padding(3);
+			this.tab_player.Size = new System.Drawing.Size(728, 307);
+			this.tab_player.TabIndex = 0;
+			this.tab_player.Text = "Players";
+			this.tab_player.UseVisualStyleBackColor = true;
 			// 
 			// Client
 			// 
@@ -234,9 +208,6 @@
 		private System.Windows.Forms.ToolStripMenuItem mnu_server;
 		private System.Windows.Forms.ToolStripMenuItem mnu_server_connect;
 		private System.Windows.Forms.ToolStripMenuItem mnu_server_disconnect;
-		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
-		private System.Windows.Forms.ToolStripMenuItem mnu_server_logIn;
-		private System.Windows.Forms.ToolStripMenuItem mnu_server_logOut;
 		private System.Windows.Forms.ToolStripProgressBar ss_progress;
 	}
 }

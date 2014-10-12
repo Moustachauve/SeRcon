@@ -38,9 +38,8 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
+		private byte[] m_serverPassword;
 		private ulong m_currUserIndex;
-
-		private Dictionary<string, byte[]> m_adminList;
 
 		#endregion
 
@@ -110,7 +109,7 @@ namespace SeRconCore
 
 			//TODO: Load admin list from file
 			SHA256 sha256 = SHA256.Create();
-			m_adminList = new Dictionary<string, byte[]> { { "test", sha256.ComputeHash(Encoding.UTF8.GetBytes("test")) } };
+			m_serverPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes("test"));
 		}
 
 		/// <summary>
@@ -125,7 +124,7 @@ namespace SeRconCore
 
 			//TODO: Load admin list from file
 			SHA256 sha256 = SHA256.Create();
-			m_adminList = new Dictionary<string, byte[]> { { "test", sha256.ComputeHash(Encoding.UTF8.GetBytes("test")) } };
+			m_serverPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes("test"));
 		}
 
 		#endregion
@@ -228,35 +227,24 @@ namespace SeRconCore
 		{
 			var user = (UserInfo)e.Client.Tag;
 
-			int usernameLength = e.Data[1];
-			string username = Encoding.UTF8.GetString(e.Data, 2, usernameLength);
+			int passwordLenght = e.Data[1];
+			string password = Encoding.UTF8.GetString(e.Data, 2, passwordLenght);
 
-			int passwordLenght = e.Data[usernameLength + 2];
-			string password = Encoding.UTF8.GetString(e.Data, usernameLength + 3, passwordLenght);
+			user.IsLoggedIn = TryLogIn(password);
 
-			bool success = TryLogIn(username, password);
-
-			if (success)
-			{
-				user.Name = username;
-				user.IsLoggedIn = true;
-			}
 			byte[] command = new byte[2];
 			command[0] = (byte)CommandType.Login;
-			command[1] = (byte)(success ? 1 : 0);
+			command[1] = (byte)(user.IsLoggedIn ? 1 : 0);
 			m_server.Send(e.Client, command);
 		}
 
-		private bool TryLogIn(string pUsername, string pPassword)
+		private bool TryLogIn(string pPassword)
 		{
-			if (!m_adminList.ContainsKey(pUsername))
-				return false;
-
 			byte[] passwordBytes = Encoding.UTF8.GetBytes(pPassword);
 			SHA256Managed hashstring = new SHA256Managed();
 			byte[] hash = hashstring.ComputeHash(passwordBytes);
 
-			return m_adminList[pUsername].SequenceEqual(hash);
+			return m_serverPassword.SequenceEqual(hash);
 		}
 
 		#endregion
