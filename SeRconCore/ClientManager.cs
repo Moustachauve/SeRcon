@@ -34,6 +34,7 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
+		private string m_username;
 		private bool m_isLoggedIn;
 
 		private Exception m_lastConnectionError;
@@ -75,6 +76,14 @@ namespace SeRconCore
 		public bool IsConnected
 		{
 			get { return m_client != null; }
+		}
+
+		/// <summary>
+		/// Get the username used to log in the server. Null if not logged in
+		/// </summary>
+		public string Username
+		{
+			get { return m_username; }
 		}
 
 		/// <summary>
@@ -237,6 +246,11 @@ namespace SeRconCore
 		{
 			m_isLoggedIn = e.Data[1] == 1;
 
+			if(!m_isLoggedIn)
+			{
+				m_username = null;
+			}
+
 			if (OnLoggingFeedback != null)
 			{
 				OnLoggingFeedback(this, new LoggingFeedbackArgs(m_isLoggedIn));
@@ -268,18 +282,20 @@ namespace SeRconCore
 			if (IsLoggedIn)
 				throw new InvalidOperationException("Can't send a logging resquest while already logged in");
 
+			m_username = pUsername;
+
 			//TODO: Find a way to secure the password transfer over the internet
 			byte[] username = Encoding.UTF8.GetBytes(pUsername);
-			byte[] Password = Encoding.UTF8.GetBytes(pPassword);
+			byte[] password = Encoding.UTF8.GetBytes(pPassword);
 
-			byte[] command = new byte[username.Length + Password.Length + 3];
+			byte[] command = new byte[username.Length + password.Length + 3];
 			command[0] = (byte)CommandType.Login;
 
 			command[1] = (byte)username.Length;
 			username.CopyTo(command, 2);
 
-			command[username.Length + 2] = (byte)Password.Length;
-			Password.CopyTo(command, username.Length + 3);
+			command[username.Length + 2] = (byte)password.Length;
+			password.CopyTo(command, username.Length + 3);
 
 			m_client.Send(command);
 		}

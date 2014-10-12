@@ -219,8 +219,8 @@ namespace SeRconClient
 		{
 			if(e.Succeeded)
 			{
-				ss_Status.Text = "Logged in " + m_clientManager.Ip + ":" + m_clientManager.Port + " as %USERNAME%";
-				lgvConsole.WriteLine("Logged in as %USERNAME%");
+				ss_Status.Text = "Logged in " + m_clientManager.Ip + ":" + m_clientManager.Port + " as " + m_clientManager.Username;
+				lgvConsole.WriteLine("Logged in as " + m_clientManager.Username);
 			}
 			else
 			{
