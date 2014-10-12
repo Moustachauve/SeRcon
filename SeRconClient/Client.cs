@@ -16,7 +16,13 @@ namespace SeRconClient
 {
 	public partial class Client : Form
 	{
+		#region Attributes
+
 		ClientManager m_clientManager;
+
+		#endregion
+
+		#region Constructor
 
 		public Client()
 		{
@@ -24,7 +30,30 @@ namespace SeRconClient
 
 			m_clientManager = new ClientManager();
 			m_clientManager.OnDisconnected += m_clientManager_OnDisconnected;
+			m_clientManager.OnLoggingFeedback += m_clientManager_OnLoggingFeedback;
 		}
+
+		#endregion
+
+		#region Form update
+
+		/// <summary>
+		/// Update the form depending if the user is connected or not
+		/// </summary>
+		private void UpdateElementConnected()
+		{
+			Application.UseWaitCursor = false;
+
+			mnu_server_connect.Enabled = !m_clientManager.IsConnected;
+			mnu_server_disconnect.Enabled = m_clientManager.IsConnected;
+
+			mnu_server_logIn.Enabled = m_clientManager.IsConnected && !m_clientManager.IsLoggedIn;
+			mnu_server_logOut.Enabled = m_clientManager.IsConnected && m_clientManager.IsLoggedIn;
+
+			ss_progress.Visible = false;
+		}
+
+		#endregion
 
 		#region Client event handler
 
@@ -45,7 +74,7 @@ namespace SeRconClient
 
 		private void OnDisconnected(TcpEventArgs e)
 		{
-			lblStatus.Text = "Connexion to " + m_clientManager.Ip + ":" + m_clientManager.Port + " was lost";
+			ss_Status.Text = "Connexion to " + m_clientManager.Ip + ":" + m_clientManager.Port + " was lost";
 			lgvConsole.WriteLine("Connexion to " + m_clientManager.Ip + ":" + m_clientManager.Port + " was lost");
 			UpdateElementConnected();
 		}
@@ -63,23 +92,33 @@ namespace SeRconClient
 
 		#endregion
 
+		#region Server
+
+		#region Connection
+
 		private void mnu_server_connect_Click(object sender, EventArgs e)
 		{
 			new Connect(this).ShowDialog();
 		}
 
+		private void mnu_server_disconnect_Click(object sender, EventArgs e)
+		{
+			m_clientManager.Disconnect();
+			UpdateElementConnected();
+		}
+
 		#endregion
 
-		#region Form update
+		#region logging
 
-		/// <summary>
-		/// Update the form depending if the user is connected or not
-		/// </summary>
-		private void UpdateElementConnected()
+		private void mnu_server_logIn_Click(object sender, EventArgs e)
 		{
-			mnu_server_connect.Enabled = !m_clientManager.IsConnected;
-			mnu_server_disconnect.Enabled = m_clientManager.IsConnected;
+			new Login(this).ShowDialog();
 		}
+
+		#endregion
+
+		#endregion
 
 		#endregion
 
@@ -88,21 +127,24 @@ namespace SeRconClient
 		/// <summary>
 		/// Connect this client to a server
 		/// </summary>
-		/// <param name="address">Address of the server</param>
-		/// <param name="port">Port of the server</param>
-		public async void ConnectToServer(string address, string port)
+		/// <param name="pAddress">Address of the server</param>
+		/// <param name="pPort">Port of the server</param>
+		public async void ConnectToServer(string pAddress, string pPort)
 		{
-			lblStatus.Text = "Connecting to " + address + ":" + port + "...";
-			lgvConsole.WriteLine("Connecting to " + address + ":" + port + "...");
+			ss_Status.Text = "Connecting to " + pAddress + ":" + pPort + "...";
+			lgvConsole.WriteLine("Connecting to " + pAddress + ":" + pPort + "...");
+			ss_progress.Visible = true;
+
+			Application.UseWaitCursor = true;
 
 			mnu_server_connect.Enabled = false;
 
 			IPAddress serverIp;
-			if (!IPAddress.TryParse(address, out serverIp))
+			if (!IPAddress.TryParse(pAddress, out serverIp))
 			{
 				try
 				{
-					IPAddress[] ipArr = Dns.GetHostAddresses(address);
+					IPAddress[] ipArr = Dns.GetHostAddresses(pAddress);
 					foreach (IPAddress currIp in ipArr)
 					{
 						if (currIp.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
@@ -115,8 +157,8 @@ namespace SeRconClient
 				catch (Exception)
 				{
 
-					lgvConsole.WriteLine("Could not resolve " + address + " to an Ip address.", MessageType.Error);
-					lblStatus.Text = "Could not resolve " + address + " to an Ip address.";
+					lgvConsole.WriteLine("Could not resolve " + pAddress + " to an Ip address.", MessageType.Error);
+					ss_Status.Text = "Could not resolve " + pAddress + " to an Ip address.";
 
 					UpdateElementConnected();
 
@@ -125,19 +167,19 @@ namespace SeRconClient
 			}
 
 			m_clientManager.Ip = serverIp;
-			m_clientManager.Port = int.Parse(port);
+			m_clientManager.Port = int.Parse(pPort);
 
 			bool isSuccessful = await m_clientManager.ConnectAsync();
 
 			if (isSuccessful)
 			{
-				lblStatus.Text = "Connected to " + address + ":" + port;
-				lgvConsole.WriteLine("Connected to " + address + ":" + port);
+				ss_Status.Text = "Connected to " + pAddress + ":" + pPort;
+				lgvConsole.WriteLine("Connected to " + pAddress + ":" + pPort);
 			}
 			else
 			{
-				lblStatus.Text = "Failed to connect to " + address + ":" + port;
-				lgvConsole.WriteLine("Failed to connect to " + address + ":" + port, MessageType.Error);
+				ss_Status.Text = "Failed to connect to " + pAddress + ":" + pPort;
+				lgvConsole.WriteLine("Failed to connect to " + pAddress + ":" + pPort, MessageType.Error);
 				lgvConsole.Write(m_clientManager.LastConnectionError.Message);
 			}
 
@@ -145,5 +187,52 @@ namespace SeRconClient
 		}
 
 		#endregion
+
+		#region Logging into the server
+
+		public void RequestLogging(string pUsername, string pPassword)
+		{
+			Application.UseWaitCursor = true;
+			ss_Status.Text = "Trying to log in as " + pUsername + "...";
+			lgvConsole.WriteLine("Trying to log in as " + pUsername + "...");
+			mnu_server_logIn.Enabled = false;
+
+			m_clientManager.SendLoggingRequest(pUsername, pPassword);
+		}
+
+		void m_clientManager_OnLoggingFeedback(object sender, LoggingFeedbackArgs e)
+		{
+			if (InvokeRequired)
+			{
+				this.Invoke((MethodInvoker)delegate
+				{
+					OnLoggingFeedback(e);
+				});
+			}
+			else
+			{
+				OnLoggingFeedback(e);
+			}
+		}
+
+		private void OnLoggingFeedback(LoggingFeedbackArgs e)
+		{
+			if(e.Succeeded)
+			{
+				ss_Status.Text = "Logged in " + m_clientManager.Ip + ":" + m_clientManager.Port + " as %USERNAME%";
+				lgvConsole.WriteLine("Logged in as %USERNAME%");
+			}
+			else
+			{
+				ss_Status.Text = "Logging attempt failed at " + m_clientManager.Ip + ":" + m_clientManager.Port;
+				lgvConsole.WriteLine("Logging attempt failed: Invalid username/password combination", MessageType.Error);
+			}
+
+			UpdateElementConnected();
+		}
+
+		#endregion
+
 	}
 }
+

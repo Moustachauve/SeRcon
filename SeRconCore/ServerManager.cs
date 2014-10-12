@@ -283,6 +283,9 @@ namespace SeRconCore
 		/// <param name="pMessage">Message to be sent</param>
 		public void NotifyAllAdmin(string pMessage)
 		{
+			if (!IsRunning)
+				throw new InvalidOperationException("Can't send a notification while server is not running");
+
 			foreach (var currClient in ConnectedClients)
 			{
 				var clientInfo = (UserInfo)currClient.Tag;

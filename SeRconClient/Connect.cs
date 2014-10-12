@@ -24,8 +24,6 @@ namespace SeRconClient
 		private void btnConnect_Click(object sender, EventArgs e)
 		{
 			bool isValid = true;
-			int port;
-			bool portIsInt = int.TryParse(txtPort.Text, out port);
 
 			if(txtAddress.Text.Length == 0)
 			{

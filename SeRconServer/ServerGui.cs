@@ -22,6 +22,7 @@ namespace SeRconServer
 		{
 			InitializeComponent();
 
+			//TODO: Handle logging
 			m_serverHandler = new ServerManager();
 			m_serverHandler.OnClientConnected += m_serverHandler_OnClientConnected;
 			m_serverHandler.OnClientDisonnected += m_serverHandler_OnClientDisonnected;
@@ -61,6 +62,7 @@ namespace SeRconServer
 
 		private void OnClientConnect(TcpEventArgs arg)
 		{
+			//TODO: Show ip or something to identify
 			logViewer.WriteLine("Client connected");
 			m_serverHandler.Notify("Welcome to this server.", arg.Client);
 		}
@@ -86,6 +88,8 @@ namespace SeRconServer
 
 		private void OnClientDisconnect(TcpEventArgs arg)
 		{
+			//TODO: Show ip, id or something to identify
+			//TODO: Send notification to admins if the client was admin
 			logViewer.WriteLine("Client disconnected");
 		}
 
