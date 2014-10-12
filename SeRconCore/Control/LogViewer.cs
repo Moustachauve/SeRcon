@@ -47,21 +47,20 @@ namespace SeRconCore.Control
 		public void Clear()
 		{
 			Document.OpenNew(false);
-			WriteLine("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">");
-			WriteLine("<html lang=\"en\">");
-			WriteLine("<head>");
-			WriteLine("<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">");
-			WriteLine("<title>" + DateTime.Now.ToString() + "</title>");
-			//WriteLine("<link rel=\"stylesheet\" type=\"text/css\" href=\"Style/log.css\">");
-			WriteLine("<link rel=\"StyleSheet\" HREF=\"file:///" + Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Replace("\\", "/") + m_stylesheet + "\" />");
-			WriteLine("</head>");
-			WriteLine("<body>");
-
+			WriteHtml("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">");
+			WriteHtml("<html lang=\"en\">");
+			WriteHtml("<head>");
+			WriteHtml("<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">");
+			WriteHtml("<title>" + DateTime.Now.ToString() + "</title>");
+			//WriteHtml("<link rel=\"stylesheet\" type=\"text/css\" href=\"Style/log.css\">");
+			WriteHtml("<link rel=\"StyleSheet\" HREF=\"file:///" + Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Replace("\\", "/") + m_stylesheet + "\" />");
+			WriteHtml("</head>");
+			WriteHtml("<body>");
 		}
 
-		private void WriteLine(string text)
+		private void WriteHtml(string html)
 		{
-			Document.Write(text + Environment.NewLine);
+			Document.Write(html + Environment.NewLine);
 		}
 
 		/// <summary>
@@ -75,19 +74,29 @@ namespace SeRconCore.Control
 		}
 
 		/// <summary>
-		/// Write a message in the viewer
+		/// Write a message in the viewer without the date
+		/// This method should only be used to add information to another message on another line.
+		/// </summary>
+		/// <param name="message">The message to insert in the viewer</param>
+		public void Write(string message)
+		{
+			WriteHtml("<div>" + message + "</div>");
+		}
+
+		/// <summary>
+		/// Write a message in the viewer as a normal message
 		/// </summary>
 		/// <param name="pMessage">The message to insert in the viewer</param>
-		public void Write(string pMessage)
+		public void WriteLine(string pMessage)
 		{
-			WriteLine("<div> " + pMessage + "</div>");
+			WriteLine(pMessage, MessageType.Normal);
 		}
 
 		/// <summary>
 		/// Write a message in the viewer with the correct prefix and the time
 		/// </summary>
 		/// <param name="pMessage">The message</param>
-		public void Write(string pMessage, MessageType pMessageType)
+		public void WriteLine(string pMessage, MessageType pMessageType)
 		{
 			string html = GetHtmlDate();
 			switch (pMessageType)
@@ -98,16 +107,19 @@ namespace SeRconCore.Control
 				case MessageType.Error:
 					html += "<span class='prefix error'>[ERROR]</span> ";
 					break;
+				case MessageType.ServerAction:
+					html += "<span class='prefix server'>[SERVER]</span> ";
+					break;
 				case MessageType.GuestAction:
-					html += "<span class='prefix error'>[GUEST]</span> ";
+					html += "<span class='prefix guest'>[GUEST]</span> ";
 					break;
 				case MessageType.AdminAction:
-					html += "<span class='prefix error'>[ADMIN]</span> ";
+					html += "<span class='prefix admin'>[ADMIN]</span> ";
 					break;
 			}
 			html += pMessage;
 
-			Write(html);
+			WriteHtml("<div>" + html + "</div>");
 		}
 
 		private void InitializeComponent()
@@ -120,8 +132,10 @@ namespace SeRconCore.Control
 
 	public enum MessageType
 	{
+		Normal,
 		Notification,
 		Error,
+		ServerAction,
 		GuestAction,
 		AdminAction
 	}

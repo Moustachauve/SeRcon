@@ -34,11 +34,11 @@ namespace SeRconServer
 		{
 			if (m_serverHandler.IsRunning)
 			{
-				logViewer.Write("The server is already running!", MessageType.Error);
+				logViewer.WriteLine("The server is already running!", MessageType.Error);
 				return;
 			}
 				m_serverHandler.Start();
-				logViewer.Write("Server is now listening to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
+				logViewer.WriteLine("Server is now listening to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
 			
 		}
 
@@ -61,7 +61,7 @@ namespace SeRconServer
 
 		private void OnClientConnect(TcpEventArgs arg)
 		{
-			logViewer.Write("Client connected");
+			logViewer.WriteLine("Client connected");
 			m_serverHandler.Notify("Welcome to this server.", arg.Client);
 		}
 
@@ -86,7 +86,7 @@ namespace SeRconServer
 
 		private void OnClientDisconnect(TcpEventArgs arg)
 		{
-			logViewer.Write("Client disconnected");
+			logViewer.WriteLine("Client disconnected");
 		}
 
 		#endregion
@@ -110,7 +110,7 @@ namespace SeRconServer
 
 		private void OnMessageReceived(NotificationReceivedArgs e)
 		{
-			logViewer.Write("[" + e.Type + "]: " + e.Message, MessageType.GuestAction);
+			logViewer.WriteLine("[" + e.Type + "]: " + e.Message, MessageType.GuestAction);
 		}
 
 		#endregion

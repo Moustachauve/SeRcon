@@ -2,6 +2,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using AltarNet;
 
 namespace SeRconCore
@@ -133,6 +134,30 @@ namespace SeRconCore
 			}
 			m_client = new TcpClientHandler(m_ip, m_port);
 			if (m_client.Connect())
+			{
+				m_client.Disconnected += m_client_Disconnected;
+				m_client.ReceivedFull += m_client_ReceivedFull;
+				return true;
+			}
+
+			m_lastConnectionError = m_client.LastConnectError;
+			m_client = null;
+			return false;
+		}
+
+		public async Task<bool> ConnectAsync()
+		{
+			if (m_ip == null)
+				throw new InvalidOperationException("Can not connect to a server if no Ip address is specified");
+			if (IsConnected)
+			{
+				Disconnect();
+			}
+			m_client = new TcpClientHandler(m_ip, m_port);
+
+			bool isSuccessful = await m_client.ConnectAsync();
+
+			if (isSuccessful)
 			{
 				m_client.Disconnected += m_client_Disconnected;
 				m_client.ReceivedFull += m_client_ReceivedFull;

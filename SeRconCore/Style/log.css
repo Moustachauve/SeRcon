@@ -19,7 +19,7 @@ div
 
 /* Prefix ex: [ERROR], [NOTIF], ... */
 .prefix {
-	font-weight:bold;
+	text-transform:uppercase;
 }
 
 /* ===== DATE ===== */
