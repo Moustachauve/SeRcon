@@ -57,6 +57,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="EventArgs.cs" />
+    <Compile Include="SaltContainer.cs" />
     <Compile Include="ServerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="User.cs" />

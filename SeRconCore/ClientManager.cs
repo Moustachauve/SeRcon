@@ -40,7 +40,7 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
-		private byte[] m_sessionSalt;
+		private byte[] m_salt;
 
 		private bool m_isLoggedIn;
 
@@ -70,7 +70,8 @@ namespace SeRconCore
 		public int Port
 		{
 			get { return m_port; }
-			set {
+			set
+			{
 				if (IsConnected)
 					throw new InvalidOperationException("Can't change server port while connected to a server");
 				m_port = value;
@@ -82,7 +83,7 @@ namespace SeRconCore
 		/// </summary>
 		public byte[] SessionSalt
 		{
-			get { return m_sessionSalt; }
+			get { return m_salt; }
 		}
 
 		/// <summary>
@@ -201,6 +202,8 @@ namespace SeRconCore
 
 		#region Events
 
+		#region Disconnected from server
+
 		private void m_client_Disconnected(object sender, TcpEventArgs e)
 		{
 			m_client = null;
@@ -210,26 +213,22 @@ namespace SeRconCore
 			}
 		}
 
+		#endregion
+
 		private void m_client_ReceivedFull(object sender, TcpReceivedEventArgs e)
 		{
 			var commandReceived = (CommandType)e.Data[0];
 
 			switch (commandReceived)
 			{
-				case CommandType.SessionSalt:
+				case CommandType.SaltRequest:
 					SessionSaltReceived(e.Data);
 					break;
 				case CommandType.Notification:
 					NotificationReceived(e.Data);
 					break;
-				case CommandType.Broadcast:
-					break;
 				case CommandType.Login:
 					LoginFeedbackHandler(e.Data);
-					break;
-				case CommandType.Error:
-					break;
-				default:
 					break;
 			}
 
@@ -243,10 +242,10 @@ namespace SeRconCore
 		{
 			int saltLength = pData[1];
 
-			m_sessionSalt = new byte[saltLength];
-			Array.Copy(pData, 2, m_sessionSalt, 0, saltLength);
+			m_salt = new byte[saltLength];
+			Array.Copy(pData, 2, m_salt, 0, saltLength);
 
-			if(OnSaltReceived != null)
+			if (OnSaltReceived != null)
 			{
 				OnSaltReceived(this, null);
 			}
@@ -271,11 +270,12 @@ namespace SeRconCore
 
 		private void LoginFeedbackHandler(byte[] pData)
 		{
-			m_isLoggedIn = pData[1] == 1;
+			AuthenticationResult result = (AuthenticationResult)pData[1];
+			m_isLoggedIn = result == AuthenticationResult.Success;
 
 			if (OnLoggingFeedback != null)
 			{
-				OnLoggingFeedback(this, new AuthenticationFeedbackArgs(m_isLoggedIn, m_client.InfoHandler));
+				OnLoggingFeedback(this, new AuthenticationFeedbackArgs(result, m_client.InfoHandler));
 			}
 		}
 
@@ -284,13 +284,6 @@ namespace SeRconCore
 		#endregion
 
 		#endregion
-
-		[Obsolete("This method is only there for testing purpose to test communication with server. Do not use.")]
-		public void SendMessage()
-		{
-			byte[] data = Command.PrefixCommand(CommandType.Notification, "Hello World!");
-			m_client.Send(data);
-		}
 
 		/// <summary>
 		/// Send a logging request to the server
@@ -304,14 +297,34 @@ namespace SeRconCore
 			if (IsLoggedIn)
 				throw new InvalidOperationException("Can't send a logging resquest while already logged in");
 
+			//Ask the server for a new salt
+			m_salt = null;
+			m_client.Send(new byte[] { (byte)CommandType.SaltRequest });
+
 			//Wait until we received the session salt from the server
-			await Task.Run(() => { while (m_sessionSalt == null) Thread.Sleep(25); });
+			await Task.Run(() => 
+			{
+				int timeWaiting = 0;
+				while (m_salt == null && timeWaiting < 15000) 
+				{
+					Thread.Sleep(25);
+					timeWaiting += 25;
+				}; 
+			});
+
+			if(m_salt == null)
+			{
+				if(OnLoggingFeedback != null)
+					OnLoggingFeedback(this, new AuthenticationFeedbackArgs(AuthenticationResult.Error, m_client.InfoHandler));
+
+				return;
+			}
 
 			//TODO: Find a way to secure the password transfer over the internet
 			SHA256Managed hashstring = new SHA256Managed();
-			byte[] password = new byte[pPassword.Length + m_sessionSalt.Length]; //= Encoding.UTF8.GetBytes(pPassword);
+			byte[] password = new byte[pPassword.Length + m_salt.Length]; //= Encoding.UTF8.GetBytes(pPassword);
 			Encoding.UTF8.GetBytes(pPassword).CopyTo(password, 0);
-			Array.Copy(m_sessionSalt, 0, password, pPassword.Length, m_sessionSalt.Length);
+			Array.Copy(m_salt, 0, password, pPassword.Length, m_salt.Length);
 
 			byte[] hashedPassword = hashstring.ComputeHash(password);
 

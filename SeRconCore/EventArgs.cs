@@ -39,32 +39,44 @@ namespace SeRconCore
 	#region Authentication
 
 	/// <summary>
+	/// Determine the result of the authentication request
+	/// </summary>
+	public enum AuthenticationResult : byte
+	{
+		Failed = 0,
+		Success,
+		RequestExpired,
+		Error
+	}
+
+
+	/// <summary>
 	/// Represent the result of a logging request
 	/// </summary>
 	public class AuthenticationFeedbackArgs : EventArgs
 	{
-		private bool m_succeeded;
+		private AuthenticationResult m_result;
 		private TcpClientInfo m_sender;
 
 		/// <summary>
 		/// True if successfuly connected, or false if connection was refused
 		/// </summary>
-		public bool Succeeded
+		public AuthenticationResult Result
 		{
-			get { return m_succeeded; }
+			get { return m_result; }
 		}
 
 		/// <summary>
-		/// Get the client who asked to authenticate to the server
+		/// Get the client who asked to authenticate to the server (Server side only)
 		/// </summary>
 		public TcpClientInfo Client
 		{
 			get { return m_sender; }
 		}
 
-		public AuthenticationFeedbackArgs(bool pSucceeded, TcpClientInfo pClient)
+		public AuthenticationFeedbackArgs(AuthenticationResult pResult, TcpClientInfo pClient)
 		{
-			m_succeeded = pSucceeded;
+			m_result = pResult;
 			m_sender = pClient;
 		}
 	}

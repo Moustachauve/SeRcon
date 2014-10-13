@@ -86,7 +86,7 @@
 			// mnu_server_connect
 			// 
 			this.mnu_server_connect.Name = "mnu_server_connect";
-			this.mnu_server_connect.Size = new System.Drawing.Size(152, 22);
+			this.mnu_server_connect.Size = new System.Drawing.Size(133, 22);
 			this.mnu_server_connect.Text = "Connect...";
 			this.mnu_server_connect.Click += new System.EventHandler(this.mnu_server_connect_Click);
 			// 
@@ -94,15 +94,15 @@
 			// 
 			this.mnu_server_disconnect.Enabled = false;
 			this.mnu_server_disconnect.Name = "mnu_server_disconnect";
-			this.mnu_server_disconnect.Size = new System.Drawing.Size(152, 22);
+			this.mnu_server_disconnect.Size = new System.Drawing.Size(133, 22);
 			this.mnu_server_disconnect.Text = "Disconnect";
 			this.mnu_server_disconnect.Click += new System.EventHandler(this.mnu_server_disconnect_Click);
 			// 
 			// statusStrip1
 			// 
 			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.ss_progress,
-            this.ss_Status});
+            this.ss_Status,
+            this.ss_progress});
 			this.statusStrip1.Location = new System.Drawing.Point(0, 357);
 			this.statusStrip1.Name = "statusStrip1";
 			this.statusStrip1.Size = new System.Drawing.Size(736, 22);
@@ -171,7 +171,7 @@
 			this.tab_player.Text = "Players";
 			this.tab_player.UseVisualStyleBackColor = true;
 			// 
-			// Client
+			// ClientGui
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -180,7 +180,7 @@
 			this.Controls.Add(this.statusStrip1);
 			this.Controls.Add(this.menuStrip1);
 			this.MainMenuStrip = this.menuStrip1;
-			this.Name = "Client";
+			this.Name = "ClientGui";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = " ";
 			this.menuStrip1.ResumeLayout(false);

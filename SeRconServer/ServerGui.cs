@@ -22,11 +22,11 @@ namespace SeRconServer
 		{
 			InitializeComponent();
 
-			//TODO: Handle logging
 			m_serverHandler = new ServerManager();
 			m_serverHandler.OnClientConnected += m_serverHandler_OnClientConnected;
 			m_serverHandler.OnClientDisonnected += m_serverHandler_OnClientDisonnected;
 			m_serverHandler.OnAuthenticationRequest += m_serverHandler_OnAuthenticationRequest;
+			m_serverHandler.OnSaltRequested += m_serverHandler_OnSaltRequested;
 
 			Start();
 		}
@@ -38,9 +38,9 @@ namespace SeRconServer
 				logViewer.WriteLine("The server is already running!", MessageType.Error);
 				return;
 			}
-				m_serverHandler.Start();
-				logViewer.WriteLine("Server is now listening to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
-			
+			m_serverHandler.Start();
+			logViewer.WriteLine("Server is now listening to " + m_serverHandler.Ip + ":" + m_serverHandler.Port, MessageType.Notification);
+
 		}
 
 		#region OnClientConnect
@@ -120,13 +120,50 @@ namespace SeRconServer
 		{
 			var userInfo = (User)e.Client.Tag;
 
-			if (e.Succeeded)
+			string message = "";
+
+			switch (e.Result)
 			{
-				logViewer.WriteLine(userInfo.Ip + " successfuly logged in");
-				m_serverHandler.NotifyAllAdmin(userInfo.Ip + " logged in", e.Client);
+				case AuthenticationResult.Failed:
+					message = " tried to log in with invalid password";
+					break;
+				case AuthenticationResult.Success:
+					message = " successfuly logged in";
+					m_serverHandler.NotifyAllAdmin(userInfo.Ip + " logged in", e.Client);
+					break;
+				case AuthenticationResult.RequestExpired:
+					message = " tried to log in with expired salt";
+					break;
+				case AuthenticationResult.Error:
+					message = " tried to log in, but an error occured";
+					break;
+			}
+
+			logViewer.WriteLine(userInfo.Ip + message);
+		}
+
+		#endregion
+
+		#region OnSaltRequested
+
+		void m_serverHandler_OnSaltRequested(object sender, EventArgs e)
+		{
+			if (InvokeRequired)
+			{
+				this.Invoke((MethodInvoker)delegate
+				{
+					OnSaltRequested(e);
+				});
 			}
 			else
-				logViewer.WriteLine(userInfo.Ip + " tried to log in, but failed");
+			{
+				OnSaltRequested(e);
+			}
+		}
+
+		private void OnSaltRequested(EventArgs e)
+		{
+			logViewer.WriteLine("Someone requested a salt");
 		}
 
 		#endregion

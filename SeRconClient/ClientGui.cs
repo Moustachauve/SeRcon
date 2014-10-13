@@ -237,7 +237,7 @@ namespace SeRconClient
 
 		private void OnLoggingFeedback(AuthenticationFeedbackArgs e)
 		{
-			if(e.Succeeded)
+			if(e.Result == AuthenticationResult.Success)
 			{
 				ss_Status.Text = "Logged in successfully to " + m_clientManager.Ip + ":" + m_clientManager.Port;
 				lgvConsole.WriteLine("Logged in successfully");
@@ -246,7 +246,15 @@ namespace SeRconClient
 			{
 				m_clientManager.Disconnect();
 				ss_Status.Text = "Logging attempt failed at " + m_clientManager.Ip + ":" + m_clientManager.Port;
-				lgvConsole.WriteLine("Logging attempt failed: Invalid username/password combination", MessageType.Error);
+
+				if (e.Result == AuthenticationResult.Failed)
+				{
+					lgvConsole.WriteLine("Logging attempt failed: Invalid username/password combination", MessageType.Error);
+				}
+				else if(e.Result == AuthenticationResult.RequestExpired)
+				{
+					lgvConsole.WriteLine("Logging attempt failed: The request took too much time for the server. Please try again.", MessageType.Error);
+				}
 			}
 
 			UpdateElementConnected();

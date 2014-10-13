@@ -9,10 +9,8 @@ namespace SeRconCore
     internal enum CommandType : byte
     {
         Notification = 0,
-		SessionSalt,
-		Broadcast,
-        Login,
-        Error
+		SaltRequest,
+        Login
     }
 
     internal static class Command

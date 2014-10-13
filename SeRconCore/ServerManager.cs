@@ -23,17 +23,12 @@ namespace SeRconCore
 		/// </summary>
 		public event EventHandler<TcpEventArgs> OnClientDisonnected;
 
-		//Server can't receive notification from client(?)
-		[Obsolete("This method is for testing purpose and will be removed")]
-		/// <summary>
-		/// Occurs when a message is received from an other client
-		/// </summary>
-		public event EventHandler<NotificationReceivedArgs> OnMessageReceived;
-
 		/// <summary>
 		/// Occurs when a client try to authenticate to the server
 		/// </summary>
 		public event EventHandler<AuthenticationFeedbackArgs> OnAuthenticationRequest;
+
+		public event EventHandler<EventArgs> OnSaltRequested;
 
 		#endregion
 
@@ -43,10 +38,9 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
-		private byte[] m_sessionSalt;
+		private Dictionary<TcpClientInfo, SaltContainer> m_saltDictionnary;
 
-		private byte[] m_serverPassword;
-		private ulong m_currUserIndex;
+		private string m_serverPassword;
 
 		#endregion
 
@@ -78,14 +72,6 @@ namespace SeRconCore
 					throw new InvalidOperationException("Can't change server listen port while server is running");
 				m_port = value;
 			}
-		}
-
-		/// <summary>
-		/// Get the byte array used during this session to salt sensitive data
-		/// </summary>
-		public byte[] SessionSalt
-		{
-			get { return m_sessionSalt; }
 		}
 
 		/// <summary>
@@ -122,18 +108,21 @@ namespace SeRconCore
 			m_ip = IPAddress.Any;
 			m_port = 8888;
 
-			m_sessionSalt = GenerateRandomSalt(10);
+			//m_sessionSalt = GenerateRandomSalt(10);
+			m_saltDictionnary = new Dictionary<TcpClientInfo, SaltContainer>();
 
 			//TODO: Load password from config file
-			SHA256 sha256 = SHA256.Create();
+			m_serverPassword = "test";
 
-			byte[] password = Encoding.UTF8.GetBytes("test");
-			byte[] passwordSalted = new byte[10 + password.Length];
+			//SHA256 sha256 = SHA256.Create();
 
-			Array.Copy(password, 0, passwordSalted, 0, password.Length);
-			Array.Copy(m_sessionSalt, 0, passwordSalted, password.Length, m_sessionSalt.Length);
+			//byte[] password = Encoding.UTF8.GetBytes("test");
+			//byte[] passwordSalted = new byte[10 + password.Length];
 
-			m_serverPassword = sha256.ComputeHash(passwordSalted);
+			//Array.Copy(password, 0, passwordSalted, 0, password.Length);
+			//Array.Copy(m_sessionSalt, 0, passwordSalted, password.Length, m_sessionSalt.Length);
+
+			//m_serverPassword = sha256.ComputeHash(passwordSalted);
 		}
 
 		/// <summary>
@@ -146,9 +135,10 @@ namespace SeRconCore
 			m_ip = pIp;
 			m_port = pPort;
 
-			//TODO: Load admin list from file
+			//TODO: Load password from config file
 			SHA256 sha256 = SHA256.Create();
-			m_serverPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes("test"));
+			m_serverPassword = "test";
+			//sha256.ComputeHash(Encoding.UTF8.GetBytes("test"));
 		}
 
 		#endregion
@@ -163,7 +153,6 @@ namespace SeRconCore
 			if (IsRunning)
 				return;
 
-			m_currUserIndex = 0;
 			m_server = new TcpServerHandler(m_ip, m_port);
 
 			//TODO: Make ssl certification
@@ -204,13 +193,6 @@ namespace SeRconCore
 
 			e.Client.Tag = new User(clientIp);
 
-			byte[] message = new byte[m_sessionSalt.Length + 2];
-			message[0] = (byte)CommandType.SessionSalt;
-			message[1] = (byte)m_sessionSalt.Length;
-			Array.Copy(m_sessionSalt, 0, message, 2, m_sessionSalt.Length);
-
-			m_server.Send(e.Client, message);
-
 			if (OnClientConnected != null)
 			{
 				OnClientConnected(this, e);
@@ -238,13 +220,11 @@ namespace SeRconCore
 			var commandReceived = (CommandType)e.Data[0];
 			switch (commandReceived)
 			{
-				case CommandType.Notification:
-					NotificationReceived(e.Data);
+				case CommandType.SaltRequest:
+					SaltRequestReceived(e);
 					break;
 				case CommandType.Login:
-					AuthenticationRequest(e);
-					break;
-				case CommandType.Error:
+					AuthenticationRequestReceived(e);
 					break;
 			}
 		}
@@ -253,39 +233,77 @@ namespace SeRconCore
 
 		#region Command Handler
 
-		#region Login Request
+		#region Salt Request
 
-		private void AuthenticationRequest(TcpReceivedEventArgs e)
+		private void SaltRequestReceived(TcpReceivedEventArgs e)
 		{
-			byte passwordLenght = e.Data[1];
-			byte[] password = new byte[passwordLenght];
-			Array.Copy(e.Data, 2, password, 0, passwordLenght);
+			if (OnSaltRequested != null)
+				OnSaltRequested(this, null);
 
-			var userInfo = (User)e.Client.Tag;
-			userInfo.IsLoggedIn = m_serverPassword.SequenceEqual(password);
+			byte[] newSalt = GenerateRandomSalt(10);
 
-			byte[] command = new byte[2];
-			command[0] = (byte)CommandType.Login;
-			command[1] = (byte)(userInfo.IsLoggedIn ? 1 : 0);
-			m_server.Send(e.Client, command);
+			byte[] message = new byte[newSalt.Length + 2];
+			message[0] = (byte)CommandType.SaltRequest;
+			message[1] = (byte)newSalt.Length;
+			Array.Copy(newSalt, 0, message, 2, newSalt.Length);
 
-			if(OnAuthenticationRequest != null)
-			{
-				OnAuthenticationRequest(this, new AuthenticationFeedbackArgs(userInfo.IsLoggedIn, e.Client));
-			}
+			m_saltDictionnary.Add(e.Client, new SaltContainer(newSalt, DateTime.Now.AddSeconds(10)));
+			m_server.Send(e.Client, message);
 		}
 
 		#endregion
 
-		[Obsolete("This method is only used for testing purpose")]
-		private void NotificationReceived(byte[] data)
+		#region Authentication Request
+
+		private void AuthenticationRequestReceived(TcpReceivedEventArgs e)
 		{
-			if (OnMessageReceived != null)
+			byte passwordLenght = e.Data[1];
+			byte[] clientPassword = new byte[passwordLenght];
+			Array.Copy(e.Data, 2, clientPassword, 0, passwordLenght);
+
+			var userInfo = (User)e.Client.Tag;
+			//TODO: Per request, per client seed verification
+			userInfo.IsLoggedIn = false;
+			AuthenticationResult result = AuthenticationResult.RequestExpired;
+
+			if (m_saltDictionnary.ContainsKey(e.Client))
 			{
-				string message = Encoding.UTF8.GetString(data, 1, data.Length - 1);
-				OnMessageReceived(this, new NotificationReceivedArgs(message, "Client"));
+				SaltContainer clientSalt = m_saltDictionnary[e.Client];
+				if (clientSalt.Expiration > DateTime.Now)
+				{
+					//TODO: Put this in a method
+					//Hash the server password with the correct salt
+					byte[] serverPasword = Encoding.UTF8.GetBytes(m_serverPassword);
+					byte[] passwordSalted = new byte[clientSalt.Salt.Length + serverPasword.Length];
+
+					SHA256 sha256 = SHA256.Create();
+					Array.Copy(serverPasword, 0, passwordSalted, 0, serverPasword.Length);
+					Array.Copy(clientSalt.Salt, 0, passwordSalted, serverPasword.Length, clientSalt.Salt.Length);
+
+					byte[] hashedPassword = sha256.ComputeHash(passwordSalted);
+
+					if(hashedPassword.SequenceEqual(clientPassword))
+					{
+						userInfo.IsLoggedIn = true;
+						result = AuthenticationResult.Success;
+					}
+					else
+						result = AuthenticationResult.Failed;
+				}
+			}
+
+			byte[] command = new byte[2];
+			command[0] = (byte)CommandType.Login;
+			command[1] = (byte)result;
+			m_server.Send(e.Client, command);
+
+			if (OnAuthenticationRequest != null)
+			{
+				OnAuthenticationRequest(this, new AuthenticationFeedbackArgs(result, e.Client));
 			}
 		}
+
+		#endregion
 
 		#endregion
 
