@@ -283,15 +283,20 @@ namespace SeRconCore
 				throw new InvalidOperationException("Can't send a logging resquest while already logged in");
 
 			//TODO: Find a way to secure the password transfer over the internet
+			SHA256Managed hashstring = new SHA256Managed();
 			byte[] password = Encoding.UTF8.GetBytes(pPassword);
+			byte[] hashedPassword = hashstring.ComputeHash(password);
 
-			byte[] command = new byte[password.Length + 2];
+
+			byte[] command = new byte[hashedPassword.Length + 2];
 			command[0] = (byte)CommandType.Login;
+			command[1] = (byte)hashedPassword.Length;
 
-			command[1] = (byte)password.Length;
-			password.CopyTo(command, 2);
+			hashedPassword.CopyTo(command, 2);
 
 			m_client.Send(command);
+
+			//TODO: Client get disconnected as soon as the client sign in
 		}
 
 	}

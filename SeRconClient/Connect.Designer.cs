@@ -29,6 +29,9 @@
 		private void InitializeComponent()
 		{
 			this.grpConnection = new System.Windows.Forms.GroupBox();
+			this.panPassword = new System.Windows.Forms.Panel();
+			this.txtPassword = new System.Windows.Forms.TextBox();
+			this.lblPassword = new System.Windows.Forms.Label();
 			this.panPort = new System.Windows.Forms.Panel();
 			this.txtPort = new System.Windows.Forms.TextBox();
 			this.panAddress = new System.Windows.Forms.Panel();
@@ -36,13 +39,10 @@
 			this.btnConnect = new System.Windows.Forms.Button();
 			this.lblPort = new System.Windows.Forms.Label();
 			this.lblIp = new System.Windows.Forms.Label();
-			this.lblPassword = new System.Windows.Forms.Label();
-			this.panPassword = new System.Windows.Forms.Panel();
-			this.txtPassword = new System.Windows.Forms.TextBox();
 			this.grpConnection.SuspendLayout();
+			this.panPassword.SuspendLayout();
 			this.panPort.SuspendLayout();
 			this.panAddress.SuspendLayout();
-			this.panPassword.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// grpConnection
@@ -65,6 +65,31 @@
 			this.grpConnection.TabStop = false;
 			this.grpConnection.Text = "Connect to a Rcon server";
 			// 
+			// panPassword
+			// 
+			this.panPassword.BackColor = System.Drawing.SystemColors.Control;
+			this.panPassword.Controls.Add(this.txtPassword);
+			this.panPassword.Location = new System.Drawing.Point(6, 84);
+			this.panPassword.Name = "panPassword";
+			this.panPassword.Size = new System.Drawing.Size(258, 22);
+			this.panPassword.TabIndex = 8;
+			// 
+			// txtPassword
+			// 
+			this.txtPassword.Location = new System.Drawing.Point(1, 1);
+			this.txtPassword.Name = "txtPassword";
+			this.txtPassword.Size = new System.Drawing.Size(256, 20);
+			this.txtPassword.TabIndex = 3;
+			// 
+			// lblPassword
+			// 
+			this.lblPassword.AutoSize = true;
+			this.lblPassword.Location = new System.Drawing.Point(6, 68);
+			this.lblPassword.Name = "lblPassword";
+			this.lblPassword.Size = new System.Drawing.Size(56, 13);
+			this.lblPassword.TabIndex = 9;
+			this.lblPassword.Text = "Password:";
+			// 
 			// panPort
 			// 
 			this.panPort.Controls.Add(this.txtPort);
@@ -78,7 +103,7 @@
 			this.txtPort.Location = new System.Drawing.Point(1, 1);
 			this.txtPort.Name = "txtPort";
 			this.txtPort.Size = new System.Drawing.Size(71, 20);
-			this.txtPort.TabIndex = 3;
+			this.txtPort.TabIndex = 2;
 			this.txtPort.Text = "8888";
 			// 
 			// panAddress
@@ -95,7 +120,7 @@
 			this.txtAddress.Location = new System.Drawing.Point(1, 1);
 			this.txtAddress.Name = "txtAddress";
 			this.txtAddress.Size = new System.Drawing.Size(256, 20);
-			this.txtAddress.TabIndex = 2;
+			this.txtAddress.TabIndex = 1;
 			// 
 			// btnConnect
 			// 
@@ -125,31 +150,6 @@
 			this.lblIp.TabIndex = 1;
 			this.lblIp.Text = "Address:";
 			// 
-			// lblPassword
-			// 
-			this.lblPassword.AutoSize = true;
-			this.lblPassword.Location = new System.Drawing.Point(6, 68);
-			this.lblPassword.Name = "lblPassword";
-			this.lblPassword.Size = new System.Drawing.Size(56, 13);
-			this.lblPassword.TabIndex = 9;
-			this.lblPassword.Text = "Password:";
-			// 
-			// panPassword
-			// 
-			this.panPassword.BackColor = System.Drawing.SystemColors.Control;
-			this.panPassword.Controls.Add(this.txtPassword);
-			this.panPassword.Location = new System.Drawing.Point(6, 84);
-			this.panPassword.Name = "panPassword";
-			this.panPassword.Size = new System.Drawing.Size(258, 22);
-			this.panPassword.TabIndex = 8;
-			// 
-			// txtPassword
-			// 
-			this.txtPassword.Location = new System.Drawing.Point(1, 1);
-			this.txtPassword.Name = "txtPassword";
-			this.txtPassword.Size = new System.Drawing.Size(256, 20);
-			this.txtPassword.TabIndex = 2;
-			// 
 			// Connect
 			// 
 			this.AcceptButton = this.btnConnect;
@@ -169,12 +169,12 @@
 			this.Text = "Connect...";
 			this.grpConnection.ResumeLayout(false);
 			this.grpConnection.PerformLayout();
+			this.panPassword.ResumeLayout(false);
+			this.panPassword.PerformLayout();
 			this.panPort.ResumeLayout(false);
 			this.panPort.PerformLayout();
 			this.panAddress.ResumeLayout(false);
 			this.panAddress.PerformLayout();
-			this.panPassword.ResumeLayout(false);
-			this.panPassword.PerformLayout();
 			this.ResumeLayout(false);
 
 		}

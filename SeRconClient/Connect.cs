@@ -19,6 +19,7 @@ namespace SeRconClient
 			InitializeComponent();
 
 			m_parent = pParent;
+			txtAddress.Focus();
 		}
 
 		private void btnConnect_Click(object sender, EventArgs e)

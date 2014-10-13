@@ -225,26 +225,18 @@ namespace SeRconCore
 
 		private void LoginRequest(TcpReceivedEventArgs e)
 		{
-			var user = (UserInfo)e.Client.Tag;
+			var user = (UserInfo)e.Client.Tag;			
 
-			int passwordLenght = e.Data[1];
-			string password = Encoding.UTF8.GetString(e.Data, 2, passwordLenght);
+			byte passwordLenght = e.Data[1];
+			byte[] password = new byte[passwordLenght];
+			Array.Copy(e.Data, 2, password, 0, passwordLenght);
 
-			user.IsLoggedIn = TryLogIn(password);
+			user.IsLoggedIn = m_serverPassword.SequenceEqual(password);
 
 			byte[] command = new byte[2];
 			command[0] = (byte)CommandType.Login;
 			command[1] = (byte)(user.IsLoggedIn ? 1 : 0);
 			m_server.Send(e.Client, command);
-		}
-
-		private bool TryLogIn(string pPassword)
-		{
-			byte[] passwordBytes = Encoding.UTF8.GetBytes(pPassword);
-			SHA256Managed hashstring = new SHA256Managed();
-			byte[] hash = hashstring.ComputeHash(passwordBytes);
-
-			return m_serverPassword.SequenceEqual(hash);
 		}
 
 		#endregion
