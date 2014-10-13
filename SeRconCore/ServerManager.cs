@@ -38,6 +38,8 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
+		private byte[] m_sessionSalt;
+
 		private byte[] m_serverPassword;
 		private ulong m_currUserIndex;
 
@@ -74,6 +76,14 @@ namespace SeRconCore
 		}
 
 		/// <summary>
+		/// Get the byte array used during this session to salt sensitive data
+		/// </summary>
+		public byte[] SessionSalt
+		{
+			get { return m_sessionSalt; }
+		}
+
+		/// <summary>
 		/// Determine whether the Rcon server is running or not
 		/// </summary>
 		public bool IsRunning
@@ -107,9 +117,18 @@ namespace SeRconCore
 			m_ip = IPAddress.Any;
 			m_port = 8888;
 
-			//TODO: Load admin list from file
+			m_sessionSalt = GenerateRandomSalt(10);
+
+			//TODO: Load password from config file
 			SHA256 sha256 = SHA256.Create();
-			m_serverPassword = sha256.ComputeHash(Encoding.UTF8.GetBytes("test"));
+
+			byte[] password = Encoding.UTF8.GetBytes("test");
+			byte[] passwordSalted = new byte[10 + password.Length];
+
+			Array.Copy(password, 0, passwordSalted, 0, password.Length);
+			Array.Copy(m_sessionSalt, 0, passwordSalted, password.Length, m_sessionSalt.Length);
+
+			m_serverPassword = sha256.ComputeHash(passwordSalted);
 		}
 
 		/// <summary>
@@ -178,6 +197,13 @@ namespace SeRconCore
 		{
 			UserInfo client = new UserInfo(m_currUserIndex++, "Guest");
 			e.Client.Tag = client;
+
+			byte[] message = new byte[m_sessionSalt.Length + 2];
+			message[0] = (byte)CommandType.SessionSalt;
+			message[1] = (byte)m_sessionSalt.Length;
+			Array.Copy(m_sessionSalt, 0, message, 2, m_sessionSalt.Length);
+
+			m_server.Send(e.Client, message);
 
 			if (OnClientConnected != null)
 			{
@@ -305,5 +331,16 @@ namespace SeRconCore
 
 		#endregion
 
+		private byte[] GenerateRandomSalt(int saltLength)
+		{
+			Random rnd = new Random();
+			byte[] salt = new byte[saltLength];
+			for (int i = 0; i < saltLength; i++)
+			{
+				salt[i] = (byte)rnd.Next(0, 255);
+			}
+
+			return salt;
+		}
 	}
 }

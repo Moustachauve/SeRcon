@@ -243,6 +243,7 @@ namespace SeRconClient
 			}
 			else
 			{
+				m_clientManager.Disconnect();
 				ss_Status.Text = "Logging attempt failed at " + m_clientManager.Ip + ":" + m_clientManager.Port;
 				lgvConsole.WriteLine("Logging attempt failed: Invalid username/password combination", MessageType.Error);
 			}

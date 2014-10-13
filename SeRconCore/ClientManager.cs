@@ -2,6 +2,7 @@
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using AltarNet;
 
@@ -26,6 +27,11 @@ namespace SeRconCore
 		/// </summary>
 		public event EventHandler<LoggingFeedbackArgs> OnLoggingFeedback;
 
+		/// <summary>
+		/// Occurs when the server send the session salt after connecting
+		/// </summary>
+		public event EventHandler<EventArgs> OnSaltReceived;
+
 		#endregion
 
 		#region Attributes
@@ -34,7 +40,8 @@ namespace SeRconCore
 		private IPAddress m_ip;
 		private int m_port;
 
-		private string m_username;
+		private byte[] m_sessionSalt;
+
 		private bool m_isLoggedIn;
 
 		private Exception m_lastConnectionError;
@@ -71,19 +78,19 @@ namespace SeRconCore
 		}
 
 		/// <summary>
+		/// Get the byte array used during this session by the server to salt sensitive data
+		/// </summary>
+		public byte[] SessionSalt
+		{
+			get { return m_sessionSalt; }
+		}
+
+		/// <summary>
 		/// Determine whether the client is connected to a server or not
 		/// </summary>
 		public bool IsConnected
 		{
 			get { return m_client != null; }
-		}
-
-		/// <summary>
-		/// Get the username used to log in the server. Null if not logged in
-		/// </summary>
-		public string Username
-		{
-			get { return m_username; }
 		}
 
 		/// <summary>
@@ -209,13 +216,16 @@ namespace SeRconCore
 
 			switch (commandReceived)
 			{
+				case CommandType.SessionSalt:
+					SessionSaltReceived(e.Data);
+					break;
 				case CommandType.Notification:
 					NotificationReceived(e.Data);
 					break;
 				case CommandType.Broadcast:
 					break;
 				case CommandType.Login:
-					LoginFeedbackHandler(e);
+					LoginFeedbackHandler(e.Data);
 					break;
 				case CommandType.Error:
 					break;
@@ -226,6 +236,23 @@ namespace SeRconCore
 		}
 
 		#region Command Handler
+
+		#region Session salt
+
+		private void SessionSaltReceived(byte[] pData)
+		{
+			int saltLength = pData[1];
+
+			m_sessionSalt = new byte[saltLength];
+			Array.Copy(pData, 2, m_sessionSalt, 0, saltLength);
+
+			if(OnSaltReceived != null)
+			{
+				OnSaltReceived(this, null);
+			}
+		}
+
+		#endregion
 
 		#region Notification
 
@@ -242,14 +269,9 @@ namespace SeRconCore
 
 		#region Login Feedback
 
-		private void LoginFeedbackHandler(TcpReceivedEventArgs e)
+		private void LoginFeedbackHandler(byte[] pData)
 		{
-			m_isLoggedIn = e.Data[1] == 1;
-
-			if(!m_isLoggedIn)
-			{
-				m_username = null;
-			}
+			m_isLoggedIn = pData[1] == 1;
 
 			if (OnLoggingFeedback != null)
 			{
@@ -275,18 +297,23 @@ namespace SeRconCore
 		/// </summary>
 		/// <param name="pUsername">Username of the user</param>
 		/// <param name="pPassword">Password of the user</param>
-		public void SendLoggingRequest(string pPassword)
+		public async void SendLoggingRequest(string pPassword)
 		{
 			if (!IsConnected)
 				throw new InvalidOperationException("Can't send a logging request while not connected to a server");
 			if (IsLoggedIn)
 				throw new InvalidOperationException("Can't send a logging resquest while already logged in");
 
+			//Wait until we received the session salt from the server
+			await Task.Run(() => { while (m_sessionSalt == null) Thread.Sleep(25); });
+
 			//TODO: Find a way to secure the password transfer over the internet
 			SHA256Managed hashstring = new SHA256Managed();
-			byte[] password = Encoding.UTF8.GetBytes(pPassword);
-			byte[] hashedPassword = hashstring.ComputeHash(password);
+			byte[] password = new byte[pPassword.Length + m_sessionSalt.Length]; //= Encoding.UTF8.GetBytes(pPassword);
+			Encoding.UTF8.GetBytes(pPassword).CopyTo(password, 0);
+			Array.Copy(m_sessionSalt, 0, password, pPassword.Length, m_sessionSalt.Length);
 
+			byte[] hashedPassword = hashstring.ComputeHash(password);
 
 			byte[] command = new byte[hashedPassword.Length + 2];
 			command[0] = (byte)CommandType.Login;
@@ -295,8 +322,6 @@ namespace SeRconCore
 			hashedPassword.CopyTo(command, 2);
 
 			m_client.Send(command);
-
-			//TODO: Client get disconnected as soon as the client sign in
 		}
 
 	}
