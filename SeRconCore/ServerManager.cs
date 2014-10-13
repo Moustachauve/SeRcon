@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
 using AltarNet;
-using SeRconCore.User;
 
 namespace SeRconCore
 {
@@ -195,8 +194,7 @@ namespace SeRconCore
 
 		private void m_server_Connected(object sender, TcpEventArgs e)
 		{
-			UserInfo client = new UserInfo(m_currUserIndex++, "Guest");
-			e.Client.Tag = client;
+			e.Client.Tag = false;
 
 			byte[] message = new byte[m_sessionSalt.Length + 2];
 			message[0] = (byte)CommandType.SessionSalt;
@@ -251,17 +249,15 @@ namespace SeRconCore
 
 		private void LoginRequest(TcpReceivedEventArgs e)
 		{
-			var user = (UserInfo)e.Client.Tag;			
-
 			byte passwordLenght = e.Data[1];
 			byte[] password = new byte[passwordLenght];
 			Array.Copy(e.Data, 2, password, 0, passwordLenght);
 
-			user.IsLoggedIn = m_serverPassword.SequenceEqual(password);
+			e.Client.Tag = m_serverPassword.SequenceEqual(password);
 
 			byte[] command = new byte[2];
 			command[0] = (byte)CommandType.Login;
-			command[1] = (byte)(user.IsLoggedIn ? 1 : 0);
+			command[1] = (byte)((bool)e.Client.Tag ? 1 : 0);
 			m_server.Send(e.Client, command);
 		}
 
@@ -294,8 +290,8 @@ namespace SeRconCore
 
 			foreach (var currClient in ConnectedClients)
 			{
-				var clientInfo = (UserInfo)currClient.Tag;
-				if(clientInfo.IsLoggedIn)
+				bool isLoggedIn = (bool)currClient.Tag;
+				if (isLoggedIn)
 				{
 					Notify(pMessage, currClient);
 				}
