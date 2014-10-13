@@ -12,9 +12,9 @@ namespace SeRconClient
 {
 	public partial class Connect : Form
 	{
-		private Client m_parent;
+		private ClientGui m_parent;
 
-		public Connect(Client pParent)
+		public Connect(ClientGui pParent)
 		{
 			InitializeComponent();
 

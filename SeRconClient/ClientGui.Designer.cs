@@ -1,6 +1,6 @@
 ﻿namespace SeRconClient
 {
-	partial class Client
+	partial class ClientGui
 	{
 		/// <summary>
 		/// Required designer variable.

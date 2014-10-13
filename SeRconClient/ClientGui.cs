@@ -14,7 +14,7 @@ using SeRconCore.Control;
 
 namespace SeRconClient
 {
-	public partial class Client : Form
+	public partial class ClientGui : Form
 	{
 		#region Attributes
 
@@ -24,13 +24,14 @@ namespace SeRconClient
 
 		#region Constructor
 
-		public Client()
+		public ClientGui()
 		{
 			InitializeComponent();
 
 			m_clientManager = new ClientManager();
 			m_clientManager.OnDisconnected += m_clientManager_OnDisconnected;
 			m_clientManager.OnLoggingFeedback += m_clientManager_OnLoggingFeedback;
+			m_clientManager.OnNotificationReceived += m_clientManager_OnNotificationReceived;
 		}
 
 		#endregion
@@ -249,6 +250,30 @@ namespace SeRconClient
 			}
 
 			UpdateElementConnected();
+		}
+
+		#endregion
+
+		#region Notification Received
+
+		void m_clientManager_OnNotificationReceived(object sender, NotificationReceivedArgs e)
+		{
+			if (InvokeRequired)
+			{
+				this.Invoke((MethodInvoker)delegate
+				{
+					OnNotificationReceived(e);
+				});
+			}
+			else
+			{
+				OnNotificationReceived(e);
+			}
+		}
+
+		private void OnNotificationReceived(NotificationReceivedArgs e)
+		{
+			lgvConsole.WriteLine(e.Message, MessageType.Notification);
 		}
 
 		#endregion
