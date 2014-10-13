@@ -299,11 +299,24 @@ namespace SeRconCore
 		/// <param name="pMessage">Message to be sent</param>
 		public void NotifyAllAdmin(string pMessage)
 		{
+			NotifyAllAdmin(pMessage, null);
+		}
+
+		/// <summary>
+		/// Send a notification to all authenticated user except one
+		/// </summary>
+		/// <param name="pMessage">Message to be sent</param>
+		/// <param name="pExclude">The user to exclude</param>
+		public void NotifyAllAdmin(string pMessage, TcpClientInfo pExclude)
+		{
 			if (!IsRunning)
 				throw new InvalidOperationException("Can't send a notification while server is not running");
 
 			foreach (var currClient in ConnectedClients)
 			{
+				if (currClient == pExclude)
+					continue;
+
 				User userInfo = (User)currClient.Tag;
 
 				if (userInfo.IsLoggedIn)

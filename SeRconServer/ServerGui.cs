@@ -94,6 +94,7 @@ namespace SeRconServer
 			var userInfo = (User)e.Client.Tag;
 
 			logViewer.WriteLine(userInfo.Ip + " disconnected");
+			m_serverHandler.NotifyAllAdmin(userInfo.Ip + " disconnected");
 		}
 
 		#endregion
@@ -122,7 +123,7 @@ namespace SeRconServer
 			if (e.Succeeded)
 			{
 				logViewer.WriteLine(userInfo.Ip + " successfuly logged in");
-				m_serverHandler.NotifyAllAdmin(userInfo.Ip + " logged in");
+				m_serverHandler.NotifyAllAdmin(userInfo.Ip + " logged in", e.Client);
 			}
 			else
 				logViewer.WriteLine(userInfo.Ip + " tried to log in, but failed");
