@@ -23,11 +23,17 @@ namespace SeRconCore
 		/// </summary>
 		public event EventHandler<TcpEventArgs> OnClientDisonnected;
 
+		//Server can't receive notification from client(?)
 		[Obsolete("This method is for testing purpose and will be removed")]
 		/// <summary>
 		/// Occurs when a message is received from an other client
 		/// </summary>
 		public event EventHandler<NotificationReceivedArgs> OnMessageReceived;
+
+		/// <summary>
+		/// Occurs when a client try to authenticate to the server
+		/// </summary>
+		public event EventHandler<AuthenticationFeedbackArgs> OnAuthenticationRequest;
 
 		#endregion
 
@@ -194,7 +200,9 @@ namespace SeRconCore
 
 		private void m_server_Connected(object sender, TcpEventArgs e)
 		{
-			e.Client.Tag = false;
+			IPAddress clientIp = ((IPEndPoint)e.Client.Client.Client.RemoteEndPoint).Address;
+
+			e.Client.Tag = new User(clientIp);
 
 			byte[] message = new byte[m_sessionSalt.Length + 2];
 			message[0] = (byte)CommandType.SessionSalt;
@@ -234,7 +242,7 @@ namespace SeRconCore
 					NotificationReceived(e.Data);
 					break;
 				case CommandType.Login:
-					LoginRequest(e);
+					AuthenticationRequest(e);
 					break;
 				case CommandType.Error:
 					break;
@@ -247,18 +255,24 @@ namespace SeRconCore
 
 		#region Login Request
 
-		private void LoginRequest(TcpReceivedEventArgs e)
+		private void AuthenticationRequest(TcpReceivedEventArgs e)
 		{
 			byte passwordLenght = e.Data[1];
 			byte[] password = new byte[passwordLenght];
 			Array.Copy(e.Data, 2, password, 0, passwordLenght);
 
-			e.Client.Tag = m_serverPassword.SequenceEqual(password);
+			var userInfo = (User)e.Client.Tag;
+			userInfo.IsLoggedIn = m_serverPassword.SequenceEqual(password);
 
 			byte[] command = new byte[2];
 			command[0] = (byte)CommandType.Login;
-			command[1] = (byte)((bool)e.Client.Tag ? 1 : 0);
+			command[1] = (byte)(userInfo.IsLoggedIn ? 1 : 0);
 			m_server.Send(e.Client, command);
+
+			if(OnAuthenticationRequest != null)
+			{
+				OnAuthenticationRequest(this, new AuthenticationFeedbackArgs(userInfo.IsLoggedIn, e.Client));
+			}
 		}
 
 		#endregion
@@ -290,8 +304,9 @@ namespace SeRconCore
 
 			foreach (var currClient in ConnectedClients)
 			{
-				bool isLoggedIn = (bool)currClient.Tag;
-				if (isLoggedIn)
+				User userInfo = (User)currClient.Tag;
+
+				if (userInfo.IsLoggedIn)
 				{
 					Notify(pMessage, currClient);
 				}

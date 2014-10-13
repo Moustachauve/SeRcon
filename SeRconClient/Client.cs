@@ -219,7 +219,7 @@ namespace SeRconClient
 			m_clientManager.SendLoggingRequest(pPassword);
 		}
 
-		void m_clientManager_OnLoggingFeedback(object sender, LoggingFeedbackArgs e)
+		void m_clientManager_OnLoggingFeedback(object sender, AuthenticationFeedbackArgs e)
 		{
 			if (InvokeRequired)
 			{
@@ -234,7 +234,7 @@ namespace SeRconClient
 			}
 		}
 
-		private void OnLoggingFeedback(LoggingFeedbackArgs e)
+		private void OnLoggingFeedback(AuthenticationFeedbackArgs e)
 		{
 			if(e.Succeeded)
 			{

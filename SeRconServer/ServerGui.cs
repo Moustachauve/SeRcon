@@ -26,7 +26,7 @@ namespace SeRconServer
 			m_serverHandler = new ServerManager();
 			m_serverHandler.OnClientConnected += m_serverHandler_OnClientConnected;
 			m_serverHandler.OnClientDisonnected += m_serverHandler_OnClientDisonnected;
-			m_serverHandler.OnMessageReceived += m_serverHandler_OnMessageReceived;
+			m_serverHandler.OnAuthenticationRequest += m_serverHandler_OnAuthenticationRequest;
 
 			Start();
 		}
@@ -60,11 +60,12 @@ namespace SeRconServer
 			}
 		}
 
-		private void OnClientConnect(TcpEventArgs arg)
+		private void OnClientConnect(TcpEventArgs e)
 		{
-			//TODO: Show ip or something to identify
-			logViewer.WriteLine("Client connected");
-			m_serverHandler.Notify("Welcome to this server.", arg.Client);
+			var userInfo = (User)e.Client.Tag;
+
+			logViewer.WriteLine(userInfo.Ip + " connected");
+			m_serverHandler.Notify("Welcome to this server.", e.Client);
 		}
 
 		#endregion
@@ -86,35 +87,45 @@ namespace SeRconServer
 			}
 		}
 
-		private void OnClientDisconnect(TcpEventArgs arg)
+		private void OnClientDisconnect(TcpEventArgs e)
 		{
-			//TODO: Show ip, id or something to identify
 			//TODO: Send notification to admins if the client was admin
-			logViewer.WriteLine("Client disconnected");
+
+			var userInfo = (User)e.Client.Tag;
+
+			logViewer.WriteLine(userInfo.Ip + " disconnected");
 		}
 
 		#endregion
 
-		#region OnMessageReceived
+		#region OnAuthenticationRequest
 
-		void m_serverHandler_OnMessageReceived(object sender, NotificationReceivedArgs e)
+		void m_serverHandler_OnAuthenticationRequest(object sender, AuthenticationFeedbackArgs e)
 		{
 			if (InvokeRequired)
 			{
 				this.Invoke((MethodInvoker)delegate
 				{
-					OnMessageReceived(e);
+					OnAuthenticationRequest(e);
 				});
 			}
 			else
 			{
-				OnMessageReceived(e);
+				OnAuthenticationRequest(e);
 			}
 		}
 
-		private void OnMessageReceived(NotificationReceivedArgs e)
+		private void OnAuthenticationRequest(AuthenticationFeedbackArgs e)
 		{
-			logViewer.WriteLine("[" + e.Type + "]: " + e.Message, MessageType.GuestAction);
+			var userInfo = (User)e.Client.Tag;
+
+			if (e.Succeeded)
+			{
+				logViewer.WriteLine(userInfo.Ip + " successfuly logged in");
+				m_serverHandler.NotifyAllAdmin(userInfo.Ip + " logged in");
+			}
+			else
+				logViewer.WriteLine(userInfo.Ip + " tried to log in, but failed");
 		}
 
 		#endregion

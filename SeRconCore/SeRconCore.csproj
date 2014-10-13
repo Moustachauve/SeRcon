@@ -59,6 +59,7 @@
     <Compile Include="EventArgs.cs" />
     <Compile Include="ServerManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="User.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Control\LogViewer.resx">

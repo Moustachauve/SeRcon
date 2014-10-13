@@ -25,7 +25,7 @@ namespace SeRconCore
 		/// <summary>
 		/// Occurs when the Rcon server answer the logging request
 		/// </summary>
-		public event EventHandler<LoggingFeedbackArgs> OnLoggingFeedback;
+		public event EventHandler<AuthenticationFeedbackArgs> OnLoggingFeedback;
 
 		/// <summary>
 		/// Occurs when the server send the session salt after connecting
@@ -275,7 +275,7 @@ namespace SeRconCore
 
 			if (OnLoggingFeedback != null)
 			{
-				OnLoggingFeedback(this, new LoggingFeedbackArgs(m_isLoggedIn));
+				OnLoggingFeedback(this, new AuthenticationFeedbackArgs(m_isLoggedIn, m_client.InfoHandler));
 			}
 		}
 
