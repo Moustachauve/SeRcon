@@ -320,7 +320,6 @@ namespace SeRconCore
 				return;
 			}
 
-			//TODO: Find a way to secure the password transfer over the internet
 			SHA256Managed hashstring = new SHA256Managed();
 			byte[] password = new byte[pPassword.Length + m_salt.Length]; //= Encoding.UTF8.GetBytes(pPassword);
 			Encoding.UTF8.GetBytes(pPassword).CopyTo(password, 0);

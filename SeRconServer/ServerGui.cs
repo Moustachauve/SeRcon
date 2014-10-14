@@ -89,8 +89,6 @@ namespace SeRconServer
 
 		private void OnClientDisconnect(TcpEventArgs e)
 		{
-			//TODO: Send notification to admins if the client was admin
-
 			var userInfo = (User)e.Client.Tag;
 
 			logViewer.WriteLine(userInfo.Ip + " disconnected");

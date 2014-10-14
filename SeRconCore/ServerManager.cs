@@ -155,8 +155,6 @@ namespace SeRconCore
 
 			m_server = new TcpServerHandler(m_ip, m_port);
 
-			//TODO: Make ssl certification
-			//m_server.SSLServerCertificate = SslHelper.GetOrCreateSelfSignedCertificate("NameHere");
 			m_server.Connected += m_server_Connected;
 			m_server.Disconnected += m_server_Disconnected;
 			m_server.ReceivedFull += m_server_ReceivedFull;
@@ -262,7 +260,7 @@ namespace SeRconCore
 			Array.Copy(e.Data, 2, clientPassword, 0, passwordLenght);
 
 			var userInfo = (User)e.Client.Tag;
-			//TODO: Per request, per client seed verification
+
 			userInfo.IsLoggedIn = false;
 			AuthenticationResult result = AuthenticationResult.RequestExpired;
 
@@ -273,16 +271,8 @@ namespace SeRconCore
 				{
 					//TODO: Put this in a method
 					//Hash the server password with the correct salt
-					byte[] serverPasword = Encoding.UTF8.GetBytes(m_serverPassword);
-					byte[] passwordSalted = new byte[clientSalt.Salt.Length + serverPasword.Length];
 
-					SHA256 sha256 = SHA256.Create();
-					Array.Copy(serverPasword, 0, passwordSalted, 0, serverPasword.Length);
-					Array.Copy(clientSalt.Salt, 0, passwordSalted, serverPasword.Length, clientSalt.Salt.Length);
-
-					byte[] hashedPassword = sha256.ComputeHash(passwordSalted);
-
-					if(hashedPassword.SequenceEqual(clientPassword))
+					if (HashString(m_serverPassword, clientSalt.Salt).SequenceEqual(clientPassword))
 					{
 						userInfo.IsLoggedIn = true;
 						result = AuthenticationResult.Success;
@@ -301,6 +291,18 @@ namespace SeRconCore
 			{
 				OnAuthenticationRequest(this, new AuthenticationFeedbackArgs(result, e.Client));
 			}
+		}
+
+		private byte[] HashString(string pString, byte[] salt)
+		{
+			byte[] stringToByte = Encoding.UTF8.GetBytes(m_serverPassword);
+			byte[] saltedString = new byte[salt.Length + stringToByte.Length];
+
+			SHA256 sha256 = SHA256.Create();
+			Array.Copy(stringToByte, 0, saltedString, 0, stringToByte.Length);
+			Array.Copy(salt, 0, saltedString, stringToByte.Length, salt.Length);
+
+			return sha256.ComputeHash(saltedString);
 		}
 
 		#endregion
